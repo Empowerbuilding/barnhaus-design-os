@@ -103,16 +103,19 @@ function RibbonCard({ p, isGhost, onVanish, onUpdate }: {
           </span>
         )}
       </div>
-      <div style={{ fontSize: 9, color: '#4b5563', fontFamily: 'Oswald', letterSpacing: '0.05em', marginBottom: ribbonTask && !isGhost ? 4 : 0 }}>
+      <div style={{ fontSize: 9, color: '#4b5563', fontFamily: 'Oswald', letterSpacing: '0.05em', marginBottom: 2 }}>
         {PHASE_LABELS[p.current_phase]?.toUpperCase()}
       </div>
-      {ribbonTask && !isGhost && (
-        <label className="flex items-center gap-1.5 cursor-pointer" onClick={e => e.stopPropagation()}>
-          <input type="checkbox" checked={false} onChange={() => handleCheck(ribbonTask)} className="accent-green-500 w-3 h-3" />
-          <span style={{ fontSize: 9, color: '#6b7280' }}>{TASK_LABELS[ribbonTask]}</span>
-        </label>
-      )}
-      {isGhost && <div style={{ fontSize: 8, color: '#374151', fontStyle: 'italic', marginTop: 2 }}>drag to confirm</div>}
+      <div style={{ height: 16, display: 'flex', alignItems: 'center' }}>
+        {ribbonTask && !isGhost ? (
+          <label className="flex items-center gap-1.5 cursor-pointer" onClick={e => e.stopPropagation()}>
+            <input type="checkbox" checked={false} onChange={() => handleCheck(ribbonTask)} className="accent-green-500 w-3 h-3" />
+            <span style={{ fontSize: 9, color: '#6b7280' }}>{TASK_LABELS[ribbonTask]}</span>
+          </label>
+        ) : isGhost ? (
+          <span style={{ fontSize: 8, color: '#374151', fontStyle: 'italic' }}>drag to confirm</span>
+        ) : null}
+      </div>
     </div>
   )
 }
