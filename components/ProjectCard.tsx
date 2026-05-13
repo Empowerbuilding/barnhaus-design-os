@@ -37,13 +37,17 @@ export default function ProjectCard({ project: p, onUpdate }: Props) {
   const [newHand, setNewHand] = useState<HandOwnership>(p.current_hand)
   const [newPhase, setNewPhase] = useState<DesignPhase>(p.current_phase)
 
+  const fetchDetail = async () => {
+    const res = await fetch(`/api/project/${p.id}`)
+    const data = await res.json()
+    setPhases(data.phases || [])
+    setActivity(data.activity || [])
+  }
+
   const toggle = async () => {
     if (!expanded && phases.length === 0) {
       setLoading(true)
-      const res = await fetch(`/api/project/${p.id}`)
-      const data = await res.json()
-      setPhases(data.phases || [])
-      setActivity(data.activity || [])
+      await fetchDetail()
       setLoading(false)
     }
     setExpanded(!expanded)
@@ -51,12 +55,20 @@ export default function ProjectCard({ project: p, onUpdate }: Props) {
 
   const doAction = async (action: string, extra?: object) => {
     setLoading(true)
+    // Optimistic update for checkboxes
+    if (action === 'check' && extra && 'field' in extra) {
+      const { field, value } = extra as { field: string; value: boolean }
+      setPhases(prev => prev.map(ph =>
+        ph.phase_name === p.current_phase ? { ...ph, [field]: value } : ph
+      ))
+    }
     await fetch(`/api/project/${p.id}/action`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action, phase_name: p.current_phase, ...extra })
     })
-    onUpdate()
+    await fetchDetail()
+    if (action !== 'check') onUpdate()
     setLoading(false)
   }
 
@@ -79,7 +91,6 @@ export default function ProjectCard({ project: p, onUpdate }: Props) {
 
   return (
     <div className={cardClass} onClick={toggle}>
-      {/* Collapsed header */}
       <div className="p-3">
         <div className="flex items-start justify-between gap-2">
           <div>
@@ -95,33 +106,34 @@ export default function ProjectCard({ project: p, onUpdate }: Props) {
           </div>
         </div>
 
-        {/* Expanded content */}
         {expanded && (
           <div onClick={e => e.stopPropagation()} className="mt-3 border-t border-gray-800 pt-3 space-y-3">
-            {loading && <p className="text-xs text-gray-500">Loading...</p>}
+            {loading && <p className="text-xs text-gray-500">Saving...</p>}
 
-            {/* Notes */}
             {p.notes && <p className="text-xs text-gray-400 leading-relaxed">{p.notes}</p>}
-
-            {/* Contact */}
             {p.client_email && <p className="text-xs text-gray-500">{p.client_email}</p>}
 
             {/* Checklist */}
-            {curPhase && (
+            {curPhase ? (
               <div className="space-y-1">
                 <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Checklist</p>
                 {(['review_scheduled','review_held','handoff_pending','draft_delivered'] as const).map(field => (
-                  <label key={field} className="flex items-center gap-2 cursor-pointer group">
-                    <input type="checkbox" checked={curPhase[field]} onChange={e =>
-                      doAction('check', { field, value: e.target.checked })
-                    } className="accent-green-500" />
+                  <label key={field} className="flex items-center gap-2 cursor-pointer group" onClick={e => e.stopPropagation()}>
+                    <input
+                      type="checkbox"
+                      checked={!!curPhase[field]}
+                      onChange={e => doAction('check', { field, value: e.target.checked })}
+                      className="accent-green-500 w-4 h-4"
+                    />
                     <span className="text-xs text-gray-300 capitalize">{field.replace(/_/g, ' ')}</span>
                   </label>
                 ))}
               </div>
+            ) : (
+              !loading && <p className="text-xs text-gray-600">No checklist data</p>
             )}
 
-            {/* Action buttons */}
+            {/* Actions */}
             <div className="space-y-2">
               <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</p>
               <div className="flex flex-wrap gap-2">
@@ -135,7 +147,6 @@ export default function ProjectCard({ project: p, onUpdate }: Props) {
                 </button>
               </div>
 
-              {/* Flip hand */}
               <div className="flex items-center gap-2">
                 <select value={newHand} onChange={e => setNewHand(e.target.value as HandOwnership)}
                   className="text-xs bg-gray-900 border border-gray-700 rounded px-2 py-1 text-gray-200">
@@ -149,7 +160,6 @@ export default function ProjectCard({ project: p, onUpdate }: Props) {
                 </button>
               </div>
 
-              {/* Next phase */}
               <div className="flex items-center gap-2">
                 <select value={newPhase} onChange={e => setNewPhase(e.target.value as DesignPhase)}
                   className="text-xs bg-gray-900 border border-gray-700 rounded px-2 py-1 text-gray-200">
