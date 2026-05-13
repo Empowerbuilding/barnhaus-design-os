@@ -19,10 +19,10 @@ export interface PhaseData {
 }
 
 export const TASK_LABELS: Record<keyof PhaseData, string> = {
-  review_scheduled: 'Review Scheduled',
-  review_held:      'Review Held',
   handoff_pending:  'Handoff to Upworker',
   draft_delivered:  'Draft Delivered',
+  review_scheduled: 'Review Scheduled',
+  review_held:      'Review Held',
 }
 
 // Which task to surface on ribbon (first unchecked in priority order)
