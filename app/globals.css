@@ -16,7 +16,6 @@
 }
 
 * { box-sizing: border-box; }
-html, body { height: 100%; overflow: hidden; }
 body { background: var(--bg); color: #e5e7eb; font-family: 'Inter', sans-serif; margin: 0; }
 .oswald { font-family: 'Oswald', sans-serif; }
 
