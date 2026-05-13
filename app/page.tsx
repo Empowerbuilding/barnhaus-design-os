@@ -21,7 +21,7 @@ export default function Home() {
   const load = useCallback(async (): Promise<void> => {
     setRefreshing(true)
     try {
-      const res = await fetch('/api/pipeline')
+      const res = await fetch('/api/pipeline', { cache: 'no-store' })
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       const data = await res.json()
       setProjects(Array.isArray(data) ? data : [])
