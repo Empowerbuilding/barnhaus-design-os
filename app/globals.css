@@ -169,3 +169,44 @@ body { background: var(--bg); color: #e5e7eb; font-family: 'Inter', sans-serif; 
 ::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: #374151; border-radius: 2px; }
+
+/* ── Client Cooling (4-10d haze) ─────────────────── */
+.card-client-cooling {
+  background: linear-gradient(135deg, #0c1a2e 0%, #0f2240 60%, #0a1628 100%);
+  border: 1px solid #1e3a5f;
+  box-shadow: 0 0 12px rgba(56,189,248,0.08), inset 0 0 20px rgba(14,42,71,0.4);
+  animation: cooling-haze 4s ease-in-out infinite;
+}
+@keyframes cooling-haze {
+  0%,100% { box-shadow: 0 0 8px rgba(56,189,248,0.06), inset 0 0 20px rgba(14,42,71,0.4); }
+  50%      { box-shadow: 0 0 18px rgba(56,189,248,0.14), inset 0 0 30px rgba(14,42,71,0.6); }
+}
+
+/* ── Ghost ribbon card (unconfirmed / system-suggested) ── */
+.card-ghost {
+  opacity: 0.38;
+  border-style: dashed !important;
+  filter: saturate(0.4);
+  transition: opacity 0.25s, filter 0.25s;
+}
+.card-ghost:hover {
+  opacity: 0.65;
+  filter: saturate(0.7);
+}
+
+/* ── Ribbon vanish animation ── */
+@keyframes ribbon-vanish {
+  0%   { opacity: 1; transform: translateY(0) scale(1); }
+  60%  { opacity: 1; transform: translateY(-8px) scale(1.04); }
+  100% { opacity: 0; transform: translateY(-24px) scale(0.9); }
+}
+.card-vanishing {
+  animation: ribbon-vanish 0.4s ease-out forwards;
+  pointer-events: none;
+}
+
+/* ── Ribbon day drop target ── */
+.ribbon-day-drop-active {
+  background: rgba(245,158,11,0.08) !important;
+  border: 1px dashed #f59e0b !important;
+}
