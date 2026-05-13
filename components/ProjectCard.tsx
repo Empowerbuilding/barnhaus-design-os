@@ -117,7 +117,7 @@ export default function ProjectCard({ project: p, onUpdate, compact = false }: P
     })
     setSparking(true)
     setTimeout(() => setSparking(false), 500)
-    onUpdate()
+    await onUpdate()
     setLoading(false)
   }
 
@@ -155,7 +155,10 @@ export default function ProjectCard({ project: p, onUpdate, compact = false }: P
 
   // Full kanban card
   return (
-    <div className={`flip-container`} onClick={handleClick}>
+    <div className={`flip-container`} onClick={handleClick}
+      draggable
+      onDragStart={e => e.dataTransfer.setData("projectId", p.id)}
+      style={{ cursor: "grab" }}>
       <div className={`flip-inner${flipped ? ' flipped' : ''}`}>
 
         {/* ── FRONT ─────────────────────────────────────────── */}

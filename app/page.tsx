@@ -17,7 +17,7 @@ export default function Home() {
   const [filter, setFilter] = useState<'all' | 'burning' | 'frozen' | 'scheduled'>('all')
   const [ribbonOpen, setRibbonOpen] = useState(true)
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (): Promise<void> => {
     try {
       const res = await fetch('/api/pipeline')
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
@@ -104,11 +104,26 @@ export default function Home() {
               const ps = byPhase(phase)
               const allForPhase = projects.filter(p => p.current_phase === phase)
               return (
-                <div key={phase} style={{
+                <div key={phase}
+                onDragOver={e => { e.preventDefault(); e.currentTarget.style.background = '#111' }}
+                onDragLeave={e => { e.currentTarget.style.background = 'transparent' }}
+                onDrop={async e => {
+                  e.preventDefault()
+                  e.currentTarget.style.background = 'transparent'
+                  const projectId = e.dataTransfer.getData('projectId')
+                  if (!projectId) return
+                  await fetch(`/api/project/${projectId}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ current_phase: phase })
+                  })
+                  await load()
+                }}
+                style={{
                   flexShrink: 0, width: 220,
                   borderRight: '1px solid #1a1a1a',
                   display: 'flex', flexDirection: 'column',
-                  height: '100%'
+                  height: '100%', transition: 'background 0.15s'
                 }}>
                   {/* Column header */}
                   <div style={{
