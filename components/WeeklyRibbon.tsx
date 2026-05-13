@@ -134,10 +134,10 @@ export default function WeeklyRibbon({ projects, onUpdate }: Props) {
 
   const activeProjects = projects.filter(p => p.current_phase !== 'archived' && !vanished.has(p.id))
 
-  const { dayMap, ghostMap } = useMemo(() => {
+  const { dayMap, deckCards } = useMemo(() => {
     const solid: Record<number, ProjectWithPhase[]> = {}
-    const ghost: Record<number, ProjectWithPhase[]> = {}
-    days.forEach(d => { solid[d.index] = []; ghost[d.index] = [] })
+    const deck: ProjectWithPhase[] = []
+    days.forEach(d => { solid[d.index] = [] })
     activeProjects.forEach(p => {
       const autoDay = autoSlotIndex(p, todayIndex)
       if (autoDay === null) return
@@ -145,16 +145,16 @@ export default function WeeklyRibbon({ projects, onUpdate }: Props) {
       if (confirmedDay !== undefined) {
         solid[confirmedDay] = [...(solid[confirmedDay] || []), p]
       } else {
-        ghost[autoDay] = [...(ghost[autoDay] || []), p]
+        deck.push(p)
       }
     })
-    return { dayMap: solid, ghostMap: ghost }
+    return { dayMap: solid, deckCards: deck }
   }, [activeProjects, confirmed, days, todayIndex])
 
   const frozen = activeProjects.filter(p => getCardState(p, p.phase_data) === 'freeze')
 
   const loadForDay = (idx: number) => {
-    const ps = [...(dayMap[idx] || []), ...(ghostMap[idx] || [])]
+    const ps = [...(dayMap[idx] || [])]
     if (!ps.length) return 0
     return Math.min(ps.reduce((s, p) => s + (PHASE_WEIGHT[p.current_phase] || 0), 0) / 2.5, 1)
   }
@@ -180,7 +180,7 @@ export default function WeeklyRibbon({ projects, onUpdate }: Props) {
     if (id) handleConfirm(id, dayIdx)
   }
 
-  const totalRibbon = Object.values(dayMap).flat().length + Object.values(ghostMap).flat().length
+  const totalRibbon = Object.values(dayMap).flat().length + deckCards.length
 
   return (
     <div style={{ borderBottom: '2px solid #1f2937', background: '#080808', flexShrink: 0 }}>
@@ -193,7 +193,7 @@ export default function WeeklyRibbon({ projects, onUpdate }: Props) {
       <div style={{ display: 'flex', overflowX: 'auto' }}>
         {days.map(day => {
           const solids = dayMap[day.index] || []
-          const ghosts = ghostMap[day.index] || []
+          const ghosts: ProjectWithPhase[] = []
           const load = loadForDay(day.index)
           const isPast = day.index < todayIndex
           return (
@@ -235,6 +235,18 @@ export default function WeeklyRibbon({ projects, onUpdate }: Props) {
             </div>
             <div style={{ padding: '3px 6px', display: 'flex', flexDirection: 'column', gap: 3 }}>
               {frozen.map(p => <RibbonCard key={p.id} p={p} isGhost={false} onVanish={handleVanish} onUpdate={onUpdate} />)}
+            </div>
+          </div>
+        )}
+        {deckCards.length > 0 && (
+          <div style={{ flexShrink: 0, width: 150, borderLeft: '1px solid #374151', padding: '4px 0', background: '#050505' }}>
+            <div style={{ padding: '0 8px 3px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span className="oswald" style={{ fontSize: 10, color: '#4b5563', letterSpacing: '0.12em' }}>DECK</span>
+              <span style={{ fontSize: 9, color: '#374151' }}>{deckCards.length}</span>
+            </div>
+            <div className="load-bar-track"><div style={{ width: '0%' }} /></div>
+            <div style={{ padding: '3px 6px', display: 'flex', flexDirection: 'column', gap: 3, overflowY: 'auto', maxHeight: 230 }}>
+              {deckCards.map(p => <RibbonCard key={p.id} p={p} isGhost={true} onVanish={handleVanish} onUpdate={onUpdate} />)}
             </div>
           </div>
         )}
