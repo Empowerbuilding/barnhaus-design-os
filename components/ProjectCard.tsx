@@ -1,5 +1,5 @@
 'use client'
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 import type { Project, ProjectPhase, Activity, DesignPhase, HandOwnership } from '@/lib/supabase'
 import { PHASES, PHASE_LABELS } from '@/lib/supabase'
 import { getCardState, getCardClass, getTicker, TASK_LABELS, type PhaseData, type OnUpdate } from '@/lib/card-utils'
@@ -46,6 +46,16 @@ export default function ProjectCard({ project: p, onUpdate, compact = false }: P
   const [newPhase, setNewPhase] = useState<DesignPhase>(p.current_phase)
   const clickTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const isDragging = useRef(false)
+  const backRef = useRef<HTMLDivElement>(null)
+  const [flipHeight, setFlipHeight] = useState<number | undefined>(undefined)
+
+  useEffect(() => {
+    if (flipped && backRef.current) {
+      setFlipHeight(backRef.current.scrollHeight)
+    } else {
+      setFlipHeight(undefined)
+    }
+  }, [flipped, activity, p.notes])
 
   const state = getCardState(p, phaseData)
   const cardClass = getCardClass(state)
@@ -190,7 +200,7 @@ export default function ProjectCard({ project: p, onUpdate, compact = false }: P
       }}
       onDragEnd={() => { setTimeout(() => { isDragging.current = false }, 50) }}
       style={{ cursor: 'grab' }}>
-      <div className={`flip-inner${flipped ? ' flipped' : ''}`}>
+      <div className={`flip-inner${flipped ? ' flipped' : ''}`} style={flipHeight ? { height: flipHeight } : undefined}>
 
         {/* ── FRONT ─────────────────────────────────── */}
         <div className={`flip-front ${cardClass}${unlocked}`} style={{ minHeight: 72 }}>
@@ -258,7 +268,7 @@ export default function ProjectCard({ project: p, onUpdate, compact = false }: P
         </div>
 
         {/* ── BACK ──────────────────────────────────── */}
-        <div className="flip-back p-3" style={{ minHeight: 72 }}>
+        <div ref={backRef} className="flip-back p-3" style={{ minHeight: 72 }}>
           <div className="flex items-center justify-between mb-3">
             <h3 className="oswald font-semibold text-white" style={{ fontSize: 13 }}>{p.client_name}</h3>
             <p style={{ fontSize: 9, color: '#374151' }}>double-click → flip back</p>
