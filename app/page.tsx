@@ -97,7 +97,7 @@ export default function Home() {
           <span className="oswald" style={{ color: '#374151', letterSpacing: '0.2em', fontSize: 14 }}>LOADING PIPELINE…</span>
         </div>
       ) : (
-        <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
+        <div style={{ flex: 1, display: 'flex', overflow: 'hidden', minHeight: 0 }}>
           {/* Active phase columns */}
           <div style={{ display: 'flex', overflowX: 'auto', flex: 1 }}>
             {DISPLAY_PHASES.map(phase => {
@@ -137,7 +137,7 @@ export default function Home() {
                     <span className="badge badge-gray" style={{ fontSize: 9 }}>{allForPhase.length}</span>
                   </div>
                   {/* Cards */}
-                  <div style={{ flex: 1, overflowY: 'auto', padding: '8px 6px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', padding: '8px 6px', display: 'flex', flexDirection: 'column', gap: 6, minHeight: 0 }}>
                     {ps.length === 0 ? (
                       <p style={{ fontSize: 10, color: '#1f2937', textAlign: 'center', paddingTop: 16 }}>—</p>
                     ) : (

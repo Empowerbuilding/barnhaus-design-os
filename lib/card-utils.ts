@@ -1,5 +1,7 @@
 import type { Project } from './supabase'
 
+export type OnUpdate = () => Promise<void>
+
 export type CardState = 'burn' | 'freeze' | 'scheduled' | 'designer' | 'upworker' | 'client'
 
 export interface PhaseData {
