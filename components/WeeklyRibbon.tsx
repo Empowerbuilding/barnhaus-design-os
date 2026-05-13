@@ -86,7 +86,7 @@ function RibbonCard({ p, isGhost, onVanish, onUpdate }: {
   return (
     <div
       className={`${cardClass}${isGhost ? ' card-ghost' : ''}${vanishing ? ' card-vanishing' : ''} p-2`}
-      style={{ height: 58, position: 'relative', cursor: isGhost ? 'grab' : 'default', overflow: 'hidden' }}
+      style={{ minHeight: 46, position: 'relative', cursor: isGhost ? 'grab' : 'default' }}
       draggable={isGhost}
       onDragStart={e => {
         e.dataTransfer.setData('ribbonProjectId', p.id)
