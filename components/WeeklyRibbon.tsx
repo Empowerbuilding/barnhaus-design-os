@@ -189,7 +189,7 @@ export default function WeeklyRibbon({ projects, onUpdate }: Props) {
           return (
             <div key={day.key}
               className={`ribbon-day${day.isToday ? ' today' : ''}${dropTarget === day.index ? ' ribbon-day-drop-active' : ''}`}
-              style={{ padding: '4px 0', opacity: isPast ? 0.4 : 1, minWidth: 120 }}
+              style={{ padding: '4px 0', opacity: isPast ? 0.4 : 1, minWidth: 120, display: 'flex', flexDirection: 'column', maxHeight: 270 }}
               onDragOver={e => { e.preventDefault(); setDropTarget(day.index) }}
               onDragLeave={() => setDropTarget(null)}
               onDrop={e => handleDrop(e, day.index)}
@@ -203,7 +203,7 @@ export default function WeeklyRibbon({ projects, onUpdate }: Props) {
               <div className="load-bar-track">
                 <div className="load-bar-fill" style={{ width: `${load * 100}%`, background: loadColor(load) }} />
               </div>
-              <div style={{ padding: '3px 6px', display: 'flex', flexDirection: 'column', gap: 3, overflowY: 'auto', maxHeight: 230 }}>
+              <div style={{ padding: '3px 6px', display: 'flex', flexDirection: 'column', gap: 3, overflowY: 'auto', flex: 1, minHeight: 0 }}>
                 {solids.length === 0 && ghosts.length === 0
                   ? <div style={{ fontSize: 9, color: '#1a1a1a', textAlign: 'center', paddingTop: 6 }}>—</div>
                   : <>
