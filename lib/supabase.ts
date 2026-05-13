@@ -1,8 +1,10 @@
 import { createClient } from '@supabase/supabase-js'
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 const serviceKey = process.env.SUPABASE_SERVICE_KEY!
 
+export const supabase = createClient(url, anonKey)
 export const supabaseAdmin = createClient(url, serviceKey)
 
 export type DesignPhase = 'concept_service'|'conceptual_design'|'draft_1'|'draft_2'|'draft_3'|'final_polish'|'archived'
