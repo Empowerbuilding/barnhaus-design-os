@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'Barnhaus Solitaire',
+  title: 'Barnhaus Design OS',
   description: 'Design Pipeline OS',
 }
 
