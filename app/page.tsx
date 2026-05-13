@@ -79,8 +79,10 @@ export default function Home() {
           ))}
           <button onClick={load} style={{
             fontSize: 11, padding: '4px 10px', borderRadius: 4, cursor: 'pointer',
-            background: '#0f0f0f', color: '#6b7280', border: '1px solid #1f2937', fontFamily: 'Oswald'
-          }}>{refreshing ? '↻' : '↻'}</button>
+            background: refreshing ? '#1f2937' : '#0f0f0f',
+            color: refreshing ? '#f59e0b' : '#6b7280',
+            border: '1px solid #1f2937', fontFamily: 'Oswald', transition: 'all 0.15s'
+          }}>{refreshing ? '⟳' : '↻'}</button>
           <button onClick={() => setRibbonOpen(r => !r)} style={{
             fontSize: 11, padding: '4px 10px', borderRadius: 4, cursor: 'pointer',
             background: '#0f0f0f', color: ribbonOpen ? '#f59e0b' : '#6b7280',
