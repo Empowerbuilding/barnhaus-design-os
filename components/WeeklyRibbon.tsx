@@ -200,7 +200,7 @@ export default function WeeklyRibbon({ projects, onUpdate }: Props) {
               <div className="load-bar-track">
                 <div className="load-bar-fill" style={{ width: `${load * 100}%`, background: loadColor(load) }} />
               </div>
-              <div style={{ padding: '3px 6px', display: 'flex', flexDirection: 'column', gap: 3, overflowY: 'auto', maxHeight: 160 }}>
+              <div style={{ padding: '3px 6px', display: 'flex', flexDirection: 'column', gap: 3, overflowY: 'auto', maxHeight: 192 }}>
                 {solids.length === 0 && ghosts.length === 0
                   ? <div style={{ fontSize: 9, color: '#1a1a1a', textAlign: 'center', paddingTop: 6 }}>—</div>
                   : <>
