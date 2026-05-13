@@ -15,7 +15,7 @@ export default function Home() {
   const [projects, setProjects] = useState<ProjectWithPhase[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<'all' | 'burning' | 'frozen' | 'scheduled'>('all')
-  const [ribbonOpen, setRibbonOpen] = useState(false)
+  const [ribbonOpen, setRibbonOpen] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
 
   const load = useCallback(async (): Promise<void> => {
@@ -53,10 +53,10 @@ export default function Home() {
   }
 
   return (
-    <div style={{ height: '100vh', background: '#0a0a0a', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+    <div style={{ minHeight: '100vh', background: '#0a0a0a', display: 'flex', flexDirection: 'column' }}>
 
       {/* ── HEADER ────────────────────────────────────────────── */}
-      <div style={{ borderBottom: '1px solid #1f2937', padding: '6px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#080808', flexShrink: 0 }}>
+      <div style={{ borderBottom: '1px solid #1f2937', padding: '10px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#080808', flexShrink: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
           <img src="/barnhaus-logo.png" alt="Barnhaus" style={{ height: 32, width: 'auto', filter: 'none' }} />
           <span className="oswald" style={{ fontSize: 20, fontWeight: 700, letterSpacing: '0.15em', color: 'white' }}>DESIGN OS</span>
@@ -132,7 +132,7 @@ export default function Home() {
                 }}>
                   {/* Column header */}
                   <div style={{
-                    padding: '5px 10px', borderBottom: '1px solid #1a1a1a',
+                    padding: '8px 10px', borderBottom: '1px solid #1a1a1a',
                     background: '#080808', position: 'sticky', top: 0, zIndex: 1,
                     display: 'flex', alignItems: 'center', justifyContent: 'space-between'
                   }}>
