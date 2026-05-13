@@ -46,10 +46,11 @@ function autoSlotIndex(p: ProjectWithPhase, todayIndex: number): number | null {
   return null
 }
 
-function RibbonCard({ p, isGhost, onVanish, onUpdate }: {
+function RibbonCard({ p, isGhost, onVanish, onUnconfirm, onUpdate }: {
   p: ProjectWithPhase
   isGhost: boolean
   onVanish: (id: string) => void
+  onUnconfirm?: (id: string) => void
   onUpdate: OnUpdate
 }) {
   const [vanishing, setVanishing] = useState(false)
@@ -101,6 +102,11 @@ function RibbonCard({ p, isGhost, onVanish, onUpdate }: {
           <span style={{ color: ticker.color, fontFamily: 'Oswald', fontWeight: ticker.value < 0 ? 700 : 600, fontSize: 15 }}>
             {ticker.value}
           </span>
+        )}
+        {!isGhost && onUnconfirm && (
+          <button onClick={e => { e.stopPropagation(); onUnconfirm(p.id) }}
+            style={{ fontSize: 9, color: '#4b5563', background: 'none', border: 'none', cursor: 'pointer', padding: '0 2px', lineHeight: 1 }}
+            title="Move back to shadow">×</button>
         )}
       </div>
       <div style={{ fontSize: 9, color: '#4b5563', fontFamily: 'Oswald', letterSpacing: '0.05em', marginBottom: 2 }}>
@@ -158,6 +164,10 @@ export default function WeeklyRibbon({ projects, onUpdate }: Props) {
     setConfirmed(prev => { const n = { ...prev, [id]: dayIdx }; saveConfirmed(n); return n })
   }, [])
 
+  const handleUnconfirm = useCallback((id: string) => {
+    setConfirmed(prev => { const n = { ...prev }; delete n[id]; saveConfirmed(n); return n })
+  }, [])
+
   const handleVanish = useCallback((id: string) => {
     setVanished(prev => { const s = new Set(prev); s.add(id); return s })
     setConfirmed(prev => { const n = { ...prev }; delete n[id]; saveConfirmed(n); return n })
@@ -207,7 +217,7 @@ export default function WeeklyRibbon({ projects, onUpdate }: Props) {
                 {solids.length === 0 && ghosts.length === 0
                   ? <div style={{ fontSize: 9, color: '#1a1a1a', textAlign: 'center', paddingTop: 6 }}>—</div>
                   : <>
-                    {solids.map(p => <RibbonCard key={p.id} p={p} isGhost={false} onVanish={handleVanish} onUpdate={onUpdate} />)}
+                    {solids.map(p => <RibbonCard key={p.id} p={p} isGhost={false} onVanish={handleVanish} onUnconfirm={handleUnconfirm} onUpdate={onUpdate} />)}
                     {ghosts.map(p => <RibbonCard key={p.id} p={p} isGhost={true} onVanish={handleVanish} onUpdate={onUpdate} />)}
                   </>
                 }
