@@ -11,10 +11,17 @@ export default function Home() {
   const [filter, setFilter] = useState<'all' | 'burning' | 'frozen'>('all')
 
   const load = useCallback(async () => {
-    const res = await fetch('/api/pipeline')
-    const data = await res.json()
-    setProjects(data)
-    setLoading(false)
+    try {
+      const res = await fetch('/api/pipeline')
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      const data = await res.json()
+      setProjects(Array.isArray(data) ? data : [])
+    } catch (err) {
+      console.error('Pipeline fetch failed:', err)
+      setProjects([])
+    } finally {
+      setLoading(false)
+    }
   }, [])
 
   useEffect(() => { load() }, [load])

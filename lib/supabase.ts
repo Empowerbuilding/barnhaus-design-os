@@ -1,14 +1,9 @@
 import { createClient } from '@supabase/supabase-js'
 
-// Anon key is safe to expose (public by design, enforces RLS)
 const SUPABASE_URL = 'https://nvsczfrljlovksrdyaix.supabase.co'
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im52c2N6ZnJsamxvdmtzcmR5YWl4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg2Mzg0NzMsImV4cCI6MjA5NDIxNDQ3M30.755-ZtOXLpg4lnZAGuFhcd4ORUZSmvq7gKjXsx0rDaM'
 
-// Service key — server-side only, never hardcoded, comes from Coolify env at runtime
-const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY!
-
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
-export const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY)
 
 export type DesignPhase = 'concept_service'|'conceptual_design'|'draft_1'|'draft_2'|'draft_3'|'final_polish'|'archived'
 export type HandOwnership = 'designer'|'upworker'|'client'
