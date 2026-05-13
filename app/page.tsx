@@ -53,7 +53,7 @@ export default function Home() {
   }
 
   return (
-    <div style={{ height: '100vh', background: '#0a0a0a', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+    <div style={{ minHeight: '100vh', background: '#0a0a0a', display: 'flex', flexDirection: 'column' }}>
 
       {/* ── HEADER ────────────────────────────────────────────── */}
       <div style={{ borderBottom: '1px solid #1f2937', padding: '10px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#080808', flexShrink: 0 }}>
@@ -102,7 +102,7 @@ export default function Home() {
           <span className="oswald" style={{ color: '#374151', letterSpacing: '0.2em', fontSize: 14 }}>LOADING PIPELINE…</span>
         </div>
       ) : (
-        <div style={{ flex: 1, display: 'flex', overflowX: 'auto', overflowY: 'hidden', minHeight: 0, minWidth: 0 }}>
+        <div style={{ flex: 1, display: 'flex', overflowX: 'auto', overflowY: 'hidden', minHeight: 0 }}>
           {/* Active phase columns */}
           <div style={{ display: 'flex', overflowX: 'auto', flex: 1, alignItems: 'stretch' }}>
             {DISPLAY_PHASES.map(phase => {
