@@ -113,6 +113,7 @@ export default function ProjectCard({ project: p, onUpdate, compact = false }: P
     if (data.auto_flip) {
       setSparking(true)
       setTimeout(() => setSparking(false), 500)
+      if (data.new_hand) setNewHand(data.new_hand as HandOwnership)
       await onUpdate()
     }
     await fetchDetail()
