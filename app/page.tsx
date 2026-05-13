@@ -102,9 +102,9 @@ export default function Home() {
           <span className="oswald" style={{ color: '#374151', letterSpacing: '0.2em', fontSize: 14 }}>LOADING PIPELINE…</span>
         </div>
       ) : (
-        <div style={{ flex: 1, display: 'flex', overflowX: 'auto', overflowY: 'hidden', minHeight: 0 }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
           {/* Active phase columns */}
-          <div style={{ display: 'flex', overflowX: 'auto', flex: 1, alignItems: 'stretch' }}>
+          <div style={{ flex: 1, display: 'flex', overflowX: 'auto', overflowY: 'hidden', minHeight: 0, alignItems: 'stretch' }}>
             {DISPLAY_PHASES.map(phase => {
               const ps = byPhase(phase)
               const allForPhase = projects.filter(p => p.current_phase === phase)
