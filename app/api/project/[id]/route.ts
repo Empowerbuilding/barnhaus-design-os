@@ -5,8 +5,25 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
   const [proj, phases, activity] = await Promise.all([
     supabaseAdmin.from('v_pipeline_status').select('*').eq('id', params.id).single(),
     supabaseAdmin.from('project_phases').select('*').eq('project_id', params.id),
-    supabaseAdmin.from('project_activity').select('*').eq('project_id', params.id).order('created_at', { ascending: false }).limit(5),
+    supabaseAdmin.from('project_activity').select('*').eq('project_id', params.id)
+      .order('created_at', { ascending: false }).limit(5),
   ])
+
+  // Auto-seed phase row for current phase if missing — ensures checklist always works
+  if (proj.data) {
+    const currentPhase = proj.data.current_phase
+    const hasCurrentPhaseRow = (phases.data || []).some((ph: {phase_name: string}) => ph.phase_name === currentPhase)
+    if (!hasCurrentPhaseRow && currentPhase !== 'archived') {
+      await supabaseAdmin.from('project_phases').upsert({
+        project_id: params.id, phase_name: currentPhase,
+        review_scheduled: false, review_held: false,
+        handoff_pending: false, draft_delivered: false, tasks: {}
+      }, { onConflict: 'project_id,phase_name' })
+      const { data: refreshed } = await supabaseAdmin.from('project_phases').select('*').eq('project_id', params.id)
+      return NextResponse.json({ project: proj.data, phases: refreshed, activity: activity.data })
+    }
+  }
+
   return NextResponse.json({ project: proj.data, phases: phases.data, activity: activity.data })
 }
 
