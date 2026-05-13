@@ -53,12 +53,12 @@ export default function Home() {
   }
 
   return (
-    <div style={{ height: '100vh', background: '#0a0a0a', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ minHeight: '100vh', background: '#0a0a0a', display: 'flex', flexDirection: 'column' }}>
 
       {/* ── HEADER ────────────────────────────────────────────── */}
-      <div style={{ borderBottom: '1px solid #1f2937', padding: '5px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#080808', flexShrink: 0 }}>
+      <div style={{ borderBottom: '1px solid #1f2937', padding: '10px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#080808', flexShrink: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-          <img src="/barnhaus-logo.png" alt="Barnhaus" style={{ height: 24, width: 'auto', filter: 'none' }} />
+          <img src="/barnhaus-logo.png" alt="Barnhaus" style={{ height: 32, width: 'auto', filter: 'none' }} />
           <span className="oswald" style={{ fontSize: 20, fontWeight: 700, letterSpacing: '0.15em', color: 'white' }}>DESIGN OS</span>
           <div style={{ display: 'flex', gap: 6, marginLeft: 8 }}>
             <span className="badge badge-red">{burning.length} 🔥</span>
@@ -102,9 +102,9 @@ export default function Home() {
           <span className="oswald" style={{ color: '#374151', letterSpacing: '0.2em', fontSize: 14 }}>LOADING PIPELINE…</span>
         </div>
       ) : (
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+        <div style={{ flex: 1, display: 'flex', overflowX: 'auto', overflowY: 'hidden', minHeight: 0 }}>
           {/* Active phase columns */}
-          <div style={{ flex: 1, display: 'flex', overflowX: 'auto', overflowY: 'hidden', minHeight: 0, alignItems: 'stretch' }}>
+          <div style={{ display: 'flex', overflowX: 'auto', flex: 1, alignItems: 'stretch' }}>
             {DISPLAY_PHASES.map(phase => {
               const ps = byPhase(phase)
               const allForPhase = projects.filter(p => p.current_phase === phase)
