@@ -16,8 +16,10 @@ export default function Home() {
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<'all' | 'burning' | 'frozen' | 'scheduled'>('all')
   const [ribbonOpen, setRibbonOpen] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
 
   const load = useCallback(async (): Promise<void> => {
+    setRefreshing(true)
     try {
       const res = await fetch('/api/pipeline')
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
@@ -28,6 +30,7 @@ export default function Home() {
       setProjects([])
     } finally {
       setLoading(false)
+      setRefreshing(false)
     }
   }, [])
 
@@ -77,7 +80,7 @@ export default function Home() {
           <button onClick={load} style={{
             fontSize: 11, padding: '4px 10px', borderRadius: 4, cursor: 'pointer',
             background: '#0f0f0f', color: '#6b7280', border: '1px solid #1f2937', fontFamily: 'Oswald'
-          }}>↻</button>
+          }}>{refreshing ? '↻' : '↻'}</button>
           <button onClick={() => setRibbonOpen(r => !r)} style={{
             fontSize: 11, padding: '4px 10px', borderRadius: 4, cursor: 'pointer',
             background: '#0f0f0f', color: ribbonOpen ? '#f59e0b' : '#6b7280',
