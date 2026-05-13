@@ -53,7 +53,7 @@ export default function Home() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0a0a0a', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ height: '100vh', background: '#0a0a0a', display: 'flex', flexDirection: 'column' }}>
 
       {/* ── HEADER ────────────────────────────────────────────── */}
       <div style={{ borderBottom: '1px solid #1f2937', padding: '10px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#080808', flexShrink: 0 }}>
