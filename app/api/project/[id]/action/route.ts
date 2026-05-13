@@ -50,7 +50,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
       await supabaseAdmin.from('projects').update(handUpdate).eq('id', params.id)
     }
 
-    return NextResponse.json({ ok: true, auto_flip: !!handUpdate })
+    return NextResponse.json({ ok: true, auto_flip: !!handUpdate, new_hand: handUpdate ? handUpdate.current_hand : null })
   }
 
   // Legacy actions
