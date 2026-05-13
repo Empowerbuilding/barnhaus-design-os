@@ -2,13 +2,20 @@
 import { useEffect, useState, useCallback } from 'react'
 import type { Project, DesignPhase } from '@/lib/supabase'
 import { PHASE_LABELS } from '@/lib/supabase'
+import type { PhaseData } from '@/lib/card-utils'
+import { getCardState } from '@/lib/card-utils'
 import ProjectCard from '@/components/ProjectCard'
+import WeeklyRibbon from '@/components/WeeklyRibbon'
+
+type ProjectWithPhase = Project & { phase_data?: PhaseData | null }
+
+const DISPLAY_PHASES: DesignPhase[] = ['concept_service','conceptual_design','draft_1','draft_2','draft_3','final_polish']
 
 export default function Home() {
-  const [projects, setProjects] = useState<Project[]>([])
+  const [projects, setProjects] = useState<ProjectWithPhase[]>([])
   const [loading, setLoading] = useState(true)
-  const [agendaOpen, setAgendaOpen] = useState(true)
-  const [filter, setFilter] = useState<'all' | 'burning' | 'frozen'>('all')
+  const [filter, setFilter] = useState<'all' | 'burning' | 'frozen' | 'scheduled'>('all')
+  const [ribbonOpen, setRibbonOpen] = useState(true)
 
   const load = useCallback(async () => {
     try {
@@ -26,111 +33,119 @@ export default function Home() {
 
   useEffect(() => { load() }, [load])
 
-  const byPhase = (phase: DesignPhase) => projects.filter(p => p.current_phase === phase)
+  const activeProjects = projects.filter(p => p.current_phase !== 'archived')
   const burning = projects.filter(p => p.is_burning)
   const frozen = projects.filter(p => p.is_frozen)
-  const active = projects.filter(p => p.current_phase !== 'archived')
+  const scheduled = projects.filter(p => {
+    const state = getCardState(p, p.phase_data)
+    return state === 'scheduled'
+  })
 
-  const displayPhases: DesignPhase[] = ['concept_service','conceptual_design','draft_1','draft_2','draft_3','final_polish']
+  const byPhase = (phase: DesignPhase) => {
+    let ps = projects.filter(p => p.current_phase === phase)
+    if (filter === 'burning') ps = ps.filter(p => p.is_burning)
+    if (filter === 'frozen') ps = ps.filter(p => p.is_frozen)
+    if (filter === 'scheduled') ps = ps.filter(p => getCardState(p, p.phase_data) === 'scheduled')
+    return ps
+  }
 
   return (
-    <div className="min-h-screen" style={{ background: '#0a0a0a' }}>
-      {/* Header */}
-      <div className="border-b border-gray-800 px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-3">
-          <img src="/barnhaus-logo.png" alt="Barnhaus" className="h-8 w-auto" style={{ filter: "brightness(0) invert(1)" }} />
-          <h1 className="oswald text-2xl font-bold tracking-widest text-white">SOLITAIRE</h1>
-        </div>
-          <div className="flex gap-2">
-            <span className="badge badge-red">{burning.length} 🔥 Burning</span>
-            <span className="badge badge-blue">{frozen.length} 🧊 Frozen</span>
-            <span className="badge badge-gray">{active.length} Active</span>
+    <div style={{ minHeight: '100vh', background: '#0a0a0a', display: 'flex', flexDirection: 'column' }}>
+
+      {/* ── HEADER ────────────────────────────────────────────── */}
+      <div style={{ borderBottom: '1px solid #1f2937', padding: '10px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#080808', flexShrink: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+          <img src="/barnhaus-logo.png" alt="Barnhaus" style={{ height: 32, width: 'auto', filter: 'brightness(0) invert(1)' }} />
+          <span className="oswald" style={{ fontSize: 20, fontWeight: 700, letterSpacing: '0.15em', color: 'white' }}>SOLITAIRE</span>
+          <div style={{ display: 'flex', gap: 6, marginLeft: 8 }}>
+            <span className="badge badge-red">{burning.length} 🔥</span>
+            <span className="badge badge-blue">{frozen.length} 🧊</span>
+            {scheduled.length > 0 && <span className="badge badge-purple">{scheduled.length} 🟣</span>}
+            <span className="badge badge-gray">{activeProjects.length} active</span>
           </div>
         </div>
-        <div className="flex gap-2">
-          {(['all','burning','frozen'] as const).map(f => (
-            <button key={f} onClick={() => setFilter(f)}
-              className={`text-xs px-3 py-1.5 rounded capitalize transition-colors ${filter === f ? 'bg-gray-600 text-white' : 'bg-gray-900 text-gray-400 hover:bg-gray-800'}`}>
-              {f}
-            </button>
+        <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+          {(['all','burning','frozen','scheduled'] as const).map(f => (
+            <button key={f} onClick={() => setFilter(f)} style={{
+              fontSize: 11, padding: '4px 10px', borderRadius: 4, cursor: 'pointer',
+              background: filter === f ? '#374151' : '#0f0f0f',
+              color: filter === f ? '#fff' : '#6b7280',
+              border: `1px solid ${filter === f ? '#4b5563' : '#1f2937'}`,
+              fontFamily: 'Oswald, sans-serif', letterSpacing: '0.05em', textTransform: 'capitalize'
+            }}>{f}</button>
           ))}
-          <button onClick={load} className="text-xs px-3 py-1.5 bg-gray-900 text-gray-400 hover:bg-gray-800 rounded transition-colors">↻ Refresh</button>
+          <button onClick={load} style={{
+            fontSize: 11, padding: '4px 10px', borderRadius: 4, cursor: 'pointer',
+            background: '#0f0f0f', color: '#6b7280', border: '1px solid #1f2937', fontFamily: 'Oswald'
+          }}>↻</button>
+          <button onClick={() => setRibbonOpen(r => !r)} style={{
+            fontSize: 11, padding: '4px 10px', borderRadius: 4, cursor: 'pointer',
+            background: '#0f0f0f', color: ribbonOpen ? '#f59e0b' : '#6b7280',
+            border: `1px solid ${ribbonOpen ? '#92400e' : '#1f2937'}`, fontFamily: 'Oswald'
+          }}>{ribbonOpen ? '▲ RIBBON' : '▼ RIBBON'}</button>
         </div>
       </div>
 
-      {/* Agenda strip */}
-      {(burning.length > 0 || frozen.length > 0) && (
-        <div className="border-b border-red-900 bg-red-950/20">
-          <button onClick={() => setAgendaOpen(!agendaOpen)}
-            className="w-full px-6 py-2 flex items-center gap-3 text-left">
-            <span className="text-xs font-bold text-red-400 oswald tracking-wider">⚡ AGENDA — NEEDS ATTENTION</span>
-            <span className="text-xs text-gray-600">{agendaOpen ? '▲ collapse' : '▼ expand'}</span>
-          </button>
-          {agendaOpen && (
-            <div className="px-6 pb-3 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-              {burning.map(p => (
-                <div key={p.id} className="card burning p-2">
-                  <p className="oswald text-sm font-semibold">{p.client_name}</p>
-                  <p className="text-xs text-red-400">{PHASE_LABELS[p.current_phase]} — {Math.abs(p.countdown_ticker ?? 0)}d overdue</p>
-                </div>
-              ))}
-              {frozen.map(p => (
-                <div key={p.id} className="card frozen p-2">
-                  <p className="oswald text-sm font-semibold">{p.client_name}</p>
-                  <p className="text-xs text-blue-300">{PHASE_LABELS[p.current_phase]} — {p.wait_ticker}d with client</p>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+      {/* ── WEEKLY RIBBON (Layer 1) ───────────────────────────── */}
+      {ribbonOpen && !loading && (
+        <WeeklyRibbon projects={projects} onUpdate={load} />
       )}
 
-      {/* Main pipeline board */}
+      {/* ── PIPELINE BOARD (Layer 2) ──────────────────────────── */}
       {loading ? (
-        <div className="flex items-center justify-center h-64">
-          <p className="text-gray-500 oswald tracking-widest">LOADING PIPELINE...</p>
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <span className="oswald" style={{ color: '#374151', letterSpacing: '0.2em', fontSize: 14 }}>LOADING PIPELINE…</span>
         </div>
       ) : (
-        <div className="flex gap-0 overflow-x-auto h-[calc(100vh-140px)]">
-          {displayPhases.map(phase => {
-            let phaseProjects = byPhase(phase)
-            if (filter === 'burning') phaseProjects = phaseProjects.filter(p => p.is_burning)
-            if (filter === 'frozen') phaseProjects = phaseProjects.filter(p => p.is_frozen)
+        <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
+          {/* Active phase columns */}
+          <div style={{ display: 'flex', overflowX: 'auto', flex: 1 }}>
+            {DISPLAY_PHASES.map(phase => {
+              const ps = byPhase(phase)
+              const allForPhase = projects.filter(p => p.current_phase === phase)
+              return (
+                <div key={phase} style={{
+                  flexShrink: 0, width: 220,
+                  borderRight: '1px solid #1a1a1a',
+                  display: 'flex', flexDirection: 'column',
+                  height: '100%'
+                }}>
+                  {/* Column header */}
+                  <div style={{
+                    padding: '8px 10px', borderBottom: '1px solid #1a1a1a',
+                    background: '#080808', position: 'sticky', top: 0, zIndex: 1,
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between'
+                  }}>
+                    <span className="oswald" style={{ fontSize: 11, letterSpacing: '0.12em', color: '#6b7280', fontWeight: 600 }}>
+                      {PHASE_LABELS[phase].toUpperCase()}
+                    </span>
+                    <span className="badge badge-gray" style={{ fontSize: 9 }}>{allForPhase.length}</span>
+                  </div>
+                  {/* Cards */}
+                  <div style={{ flex: 1, overflowY: 'auto', padding: '8px 6px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    {ps.length === 0 ? (
+                      <p style={{ fontSize: 10, color: '#1f2937', textAlign: 'center', paddingTop: 16 }}>—</p>
+                    ) : (
+                      ps.map(p => <ProjectCard key={p.id} project={p} onUpdate={load} />)
+                    )}
+                  </div>
+                </div>
+              )
+            })}
 
-            return (
-              <div key={phase} className="flex-shrink-0 w-64 border-r border-gray-800 flex flex-col">
-                {/* Column header */}
-                <div className="px-3 py-2 border-b border-gray-800 flex items-center justify-between sticky top-0" style={{ background: '#0a0a0a' }}>
-                  <h2 className="oswald text-sm font-semibold tracking-wider text-gray-300">{PHASE_LABELS[phase].toUpperCase()}</h2>
-                  <span className="badge badge-gray text-xs">{byPhase(phase).length}</span>
-                </div>
-                {/* Cards */}
-                <div className="flex-1 overflow-y-auto p-2 space-y-2">
-                  {phaseProjects.length === 0 ? (
-                    <p className="text-xs text-gray-700 text-center pt-4">empty</p>
-                  ) : (
-                    phaseProjects.map(p => (
-                      <ProjectCard key={p.id} project={p} onUpdate={load} />
-                    ))
-                  )}
-                </div>
+            {/* Archived (dimmed) */}
+            <div style={{ flexShrink: 0, width: 150, opacity: 0.35, display: 'flex', flexDirection: 'column' }}>
+              <div style={{ padding: '8px 10px', borderBottom: '1px solid #1a1a1a', background: '#080808', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span className="oswald" style={{ fontSize: 10, color: '#4b5563', letterSpacing: '0.12em' }}>ARCHIVED</span>
+                <span className="badge badge-gray" style={{ fontSize: 9 }}>{projects.filter(p => p.current_phase === 'archived').length}</span>
               </div>
-            )
-          })}
-
-          {/* Archived column */}
-          <div className="flex-shrink-0 w-48 flex flex-col opacity-50">
-            <div className="px-3 py-2 border-b border-gray-800 flex items-center justify-between sticky top-0" style={{ background: '#0a0a0a' }}>
-              <h2 className="oswald text-xs font-semibold tracking-wider text-gray-500">ARCHIVED</h2>
-              <span className="badge badge-gray">{byPhase('archived').length}</span>
-            </div>
-            <div className="flex-1 overflow-y-auto p-2 space-y-1">
-              {byPhase('archived').map(p => (
-                <div key={p.id} className="card p-2 opacity-50">
-                  <p className="text-xs text-gray-500">{p.client_name}</p>
-                </div>
-              ))}
+              <div style={{ flex: 1, overflowY: 'auto', padding: '8px 6px', display: 'flex', flexDirection: 'column', gap: 4 }}>
+                {projects.filter(p => p.current_phase === 'archived').map(p => (
+                  <div key={p.id} className="card" style={{ padding: '6px 8px' }}>
+                    <p style={{ fontSize: 10, color: '#4b5563' }}>{p.client_name}</p>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>

@@ -1,74 +1,110 @@
 'use client'
-import { useState } from 'react'
+import { useState, useRef, useCallback } from 'react'
 import type { Project, ProjectPhase, Activity, DesignPhase, HandOwnership } from '@/lib/supabase'
 import { PHASES, PHASE_LABELS } from '@/lib/supabase'
+import { getCardState, getCardClass, getTicker, TASK_LABELS, type PhaseData } from '@/lib/card-utils'
 
 interface Props {
-  project: Project
+  project: Project & { phase_data?: PhaseData | null }
   onUpdate: () => void
+  compact?: boolean
 }
 
-const HAND_LABELS: Record<HandOwnership, string> = { designer: '🟢 Designer', upworker: '🟡 Upworker', client: '🔵 Client' }
-const HAND_CLASSES: Record<HandOwnership, string> = { designer: 'designer', upworker: 'upworker', client: 'client' }
-
-function TickerDisplay({ p }: { p: Project }) {
-  if (p.is_burning) {
-    const overdue = p.countdown_ticker !== null ? Math.abs(p.countdown_ticker) : 0
-    return <span className="text-red-400 font-bold text-xs">🔥 {overdue}d OVERDUE</span>
-  }
-  if (p.is_frozen) {
-    return <span className="text-blue-300 text-xs">🧊 {p.wait_ticker}d frozen</span>
-  }
-  if (p.countdown_ticker !== null) {
-    const color = p.countdown_ticker <= 3 ? 'text-yellow-400' : 'text-green-400'
-    return <span className={`text-xs font-semibold ${color}`}>{p.countdown_ticker}d left</span>
-  }
-  if (p.wait_ticker !== null) {
-    return <span className="text-blue-400 text-xs">waiting {p.wait_ticker}d</span>
-  }
-  return null
+function EngRefTags({ p, bothActive }: { p: Project; bothActive: boolean }) {
+  const engActive = p.engineering_required && p.engineering_status !== 'none'
+  const refActive = p.referral_status === 'pending' || p.referral_status === 'complete'
+  const shimmer = engActive && refActive && bothActive ? ' tag-both-shimmer' : ''
+  return (
+    <div className="flex gap-1">
+      {p.engineering_required && (
+        <span className={`tag-ghost ${engActive ? 'tag-eng-active' : 'tag-eng-ghost'}${shimmer}`}>ENG</span>
+      )}
+      {p.referral_status !== 'none' && (
+        <span className={`tag-ghost ${refActive ? 'tag-ref-active' : 'tag-ref-ghost'}${shimmer}`}>REF</span>
+      )}
+    </div>
+  )
 }
 
-export default function ProjectCard({ project: p, onUpdate }: Props) {
+function TickerBadge({ value, color }: { value: number | null; color: string }) {
+  if (value === null) return null
+  const bold = value < 0
+  return (
+    <span style={{ color, fontFamily: 'Oswald, sans-serif', fontWeight: bold ? 700 : 600, fontSize: 18, lineHeight: 1 }}>
+      {value}
+    </span>
+  )
+}
+
+export default function ProjectCard({ project: p, onUpdate, compact = false }: Props) {
+  const [flipped, setFlipped] = useState(false)
   const [expanded, setExpanded] = useState(false)
   const [phases, setPhases] = useState<ProjectPhase[]>([])
   const [activity, setActivity] = useState<Activity[]>([])
   const [loading, setLoading] = useState(false)
+  const [sparking, setSparking] = useState(false)
+  const [phaseData, setPhaseData] = useState<PhaseData | null>(p.phase_data || null)
   const [newHand, setNewHand] = useState<HandOwnership>(p.current_hand)
   const [newPhase, setNewPhase] = useState<DesignPhase>(p.current_phase)
+  const clickTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const fetchDetail = async () => {
+  const state = getCardState(p, phaseData)
+  const cardClass = getCardClass(state)
+  const ticker = getTicker(p, state)
+
+  // Check if all tasks done → unlocked
+  const allDone = phaseData?.review_scheduled && phaseData?.review_held &&
+    phaseData?.handoff_pending && phaseData?.draft_delivered
+  const unlocked = allDone ? ' card-unlocked' : ''
+
+  const fetchDetail = useCallback(async () => {
     const res = await fetch(`/api/project/${p.id}`)
     const data = await res.json()
     setPhases(data.phases || [])
     setActivity(data.activity || [])
-  }
+    const cur = (data.phases || []).find((ph: ProjectPhase) => ph.phase_name === p.current_phase)
+    if (cur) setPhaseData(cur)
+  }, [p.id, p.current_phase])
 
-  const toggle = async () => {
-    if (!expanded && phases.length === 0) {
-      setLoading(true)
-      await fetchDetail()
-      setLoading(false)
+  const handleClick = () => {
+    // Distinguish single vs double click
+    if (clickTimer.current) {
+      clearTimeout(clickTimer.current)
+      clickTimer.current = null
+      // Double click → flip
+      setFlipped(f => !f)
+      return
     }
-    setExpanded(!expanded)
+    clickTimer.current = setTimeout(() => {
+      clickTimer.current = null
+      // Single click → expand
+      if (!expanded && phases.length === 0) {
+        setLoading(true)
+        fetchDetail().finally(() => setLoading(false))
+      }
+      setExpanded(e => !e)
+    }, 220)
   }
 
-  const doAction = async (action: string, extra?: object) => {
+  const doCheck = async (field: keyof PhaseData, value: boolean) => {
+    // Optimistic update
+    setPhaseData(prev => prev ? { ...prev, [field]: value } : { review_scheduled: false, review_held: false, handoff_pending: false, draft_delivered: false, [field]: value })
+
     setLoading(true)
-    // Optimistic update for checkboxes
-    if (action === 'check' && extra && 'field' in extra) {
-      const { field, value } = extra as { field: string; value: boolean }
-      setPhases(prev => prev.map(ph =>
-        ph.phase_name === p.current_phase ? { ...ph, [field]: value } : ph
-      ))
-    }
-    await fetch(`/api/project/${p.id}/action`, {
+    const res = await fetch(`/api/project/${p.id}/action`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action, phase_name: p.current_phase, ...extra })
+      body: JSON.stringify({ action: 'check', phase_name: p.current_phase, field, value })
     })
+    const data = await res.json()
+
+    // If auto-flip happened, trigger spark + board refresh
+    if (data.auto_flip) {
+      setSparking(true)
+      setTimeout(() => setSparking(false), 500)
+      onUpdate()
+    }
     await fetchDetail()
-    if (action !== 'check') onUpdate()
     setLoading(false)
   }
 
@@ -79,112 +115,165 @@ export default function ProjectCard({ project: p, onUpdate }: Props) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(update)
     })
+    setSparking(true)
+    setTimeout(() => setSparking(false), 500)
     onUpdate()
     setLoading(false)
   }
 
-  const cardClass = `card cursor-pointer transition-all duration-200 hover:border-gray-600 ${
-    p.is_burning ? 'burning' : p.is_frozen ? 'frozen' : HAND_CLASSES[p.current_hand]
-  }`
+  const stateLabel: Record<string, string> = {
+    burn: '🔥', freeze: '🧊', scheduled: '🟣', designer: '🟢', upworker: '🟡', client: '🔵'
+  }
 
-  const curPhase = phases.find(ph => ph.phase_name === p.current_phase)
-
-  return (
-    <div className={cardClass} onClick={toggle}>
-      <div className="p-3">
-        <div className="flex items-start justify-between gap-2">
-          <div>
-            <h3 className="oswald font-semibold text-sm tracking-wide leading-tight">{p.client_name}</h3>
-            <div className="flex items-center gap-2 mt-1 flex-wrap">
-              <span className="text-xs text-gray-400">{HAND_LABELS[p.current_hand]}</span>
-              <TickerDisplay p={p} />
-            </div>
+  if (compact) {
+    // Ribbon mini-card
+    return (
+      <div className={`${cardClass}${unlocked} p-2 cursor-pointer text-xs`} onClick={handleClick} style={{ minHeight: 54 }}>
+        {sparking && <div className="spark" />}
+        <div className="flex items-center justify-between mb-1">
+          <span className="oswald font-semibold text-white" style={{ fontSize: 11 }}>{p.client_name}</span>
+          <TickerBadge {...ticker} />
+        </div>
+        <div className="flex items-center justify-between">
+          <span style={{ fontSize: 10, color: '#6b7280' }}>{PHASE_LABELS[p.current_phase]}</span>
+          <span>{stateLabel[state]}</span>
+        </div>
+        {phaseData && expanded && (
+          <div onClick={e => e.stopPropagation()} className="mt-2 space-y-1 border-t border-gray-800 pt-2">
+            {(Object.keys(TASK_LABELS) as (keyof PhaseData)[]).map(field => (
+              <label key={field} className="flex items-center gap-1.5 cursor-pointer" onClick={e => e.stopPropagation()}>
+                <input type="checkbox" checked={!!phaseData[field]} onChange={e => doCheck(field, e.target.checked)}
+                  className="accent-green-500 w-3 h-3" />
+                <span style={{ fontSize: 10, color: '#9ca3af' }}>{TASK_LABELS[field]}</span>
+              </label>
+            ))}
           </div>
-          <div className="flex flex-col items-end gap-1 shrink-0">
-            {p.engineering_required && <span className="badge badge-gray">ENG</span>}
-            {p.referral_status === 'pending' && <span className="badge badge-yellow">REF</span>}
+        )}
+      </div>
+    )
+  }
+
+  // Full kanban card
+  return (
+    <div className={`flip-container`} onClick={handleClick}>
+      <div className={`flip-inner${flipped ? ' flipped' : ''}`}>
+
+        {/* ── FRONT ─────────────────────────────────────────── */}
+        <div className={`flip-front ${cardClass}${unlocked}`} style={{ minHeight: expanded ? 'auto' : 72 }}>
+          {sparking && <div className="spark" />}
+          <div className="p-3">
+            {/* Header row */}
+            <div className="flex items-start justify-between gap-2">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-0.5">
+                  <span style={{ fontSize: 13 }}>{stateLabel[state]}</span>
+                  <h3 className="oswald font-semibold text-white truncate" style={{ fontSize: 13, letterSpacing: '0.04em' }}>{p.client_name}</h3>
+                </div>
+                <div style={{ fontSize: 10, color: '#6b7280', fontFamily: 'Oswald' }}>{PHASE_LABELS[p.current_phase].toUpperCase()}</div>
+              </div>
+              <div className="flex flex-col items-end gap-1 shrink-0">
+                <TickerBadge {...ticker} />
+                <EngRefTags p={p} bothActive={true} />
+              </div>
+            </div>
+
+            {loading && <p style={{ fontSize: 10, color: '#4b5563', marginTop: 4 }}>saving…</p>}
+
+            {/* Expanded content */}
+            {expanded && (
+              <div onClick={e => e.stopPropagation()} className="mt-3 border-t border-gray-800 pt-3 space-y-3">
+
+                {/* Checklist */}
+                <div>
+                  <p className="oswald" style={{ fontSize: 10, color: '#4b5563', letterSpacing: '0.1em', marginBottom: 6 }}>CHECKLIST</p>
+                  <div className="space-y-1.5">
+                    {(Object.keys(TASK_LABELS) as (keyof PhaseData)[]).map(field => {
+                      const checked = !!(phaseData && phaseData[field])
+                      return (
+                        <label key={field} className="flex items-center gap-2 cursor-pointer" onClick={e => e.stopPropagation()}>
+                          <input type="checkbox" checked={checked} onChange={e => doCheck(field, e.target.checked)}
+                            className="accent-green-500 w-4 h-4" />
+                          <span style={{ fontSize: 11, color: checked ? '#22c55e' : '#9ca3af', textDecoration: checked ? 'line-through' : 'none' }}>
+                            {TASK_LABELS[field]}
+                          </span>
+                        </label>
+                      )
+                    })}
+                  </div>
+                </div>
+
+                {/* Quick actions */}
+                <div className="flex flex-wrap gap-1.5">
+                  <select value={newHand} onChange={e => setNewHand(e.target.value as HandOwnership)}
+                    className="text-xs bg-gray-900 border border-gray-700 rounded px-2 py-1 text-gray-200" style={{ fontSize: 11 }}>
+                    <option value="designer">🟢 Designer</option>
+                    <option value="upworker">🟡 Upworker</option>
+                    <option value="client">🔵 Client</option>
+                  </select>
+                  <button onClick={() => doUpdate({ current_hand: newHand })}
+                    style={{ fontSize: 11, padding: '3px 10px', background: '#1f2937', color: '#d1d5db', borderRadius: 4, border: '1px solid #374151', cursor: 'pointer' }}>
+                    Flip Hand
+                  </button>
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  <select value={newPhase} onChange={e => setNewPhase(e.target.value as DesignPhase)}
+                    className="text-xs bg-gray-900 border border-gray-700 rounded px-2 py-1 text-gray-200" style={{ fontSize: 11 }}>
+                    {PHASES.map(ph => <option key={ph} value={ph}>{PHASE_LABELS[ph]}</option>)}
+                  </select>
+                  <button onClick={() => doUpdate({ current_phase: newPhase })}
+                    style={{ fontSize: 11, padding: '3px 10px', background: '#1f2937', color: '#d1d5db', borderRadius: 4, border: '1px solid #374151', cursor: 'pointer' }}>
+                    Set Phase
+                  </button>
+                </div>
+
+                {p.notes && (
+                  <p style={{ fontSize: 11, color: '#6b7280', lineHeight: 1.5, fontStyle: 'italic' }}>{p.notes}</p>
+                )}
+
+                <p style={{ fontSize: 9, color: '#374151', textAlign: 'right' }}>double-click to flip card</p>
+              </div>
+            )}
           </div>
         </div>
 
-        {expanded && (
-          <div onClick={e => e.stopPropagation()} className="mt-3 border-t border-gray-800 pt-3 space-y-3">
-            {loading && <p className="text-xs text-gray-500">Saving...</p>}
-
-            {p.notes && <p className="text-xs text-gray-400 leading-relaxed">{p.notes}</p>}
-            {p.client_email && <p className="text-xs text-gray-500">{p.client_email}</p>}
-
-            {/* Checklist */}
-            {curPhase ? (
-              <div className="space-y-1">
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Checklist</p>
-                {(['review_scheduled','review_held','handoff_pending','draft_delivered'] as const).map(field => (
-                  <label key={field} className="flex items-center gap-2 cursor-pointer group" onClick={e => e.stopPropagation()}>
-                    <input
-                      type="checkbox"
-                      checked={!!curPhase[field]}
-                      onChange={e => doAction('check', { field, value: e.target.checked })}
-                      className="accent-green-500 w-4 h-4"
-                    />
-                    <span className="text-xs text-gray-300 capitalize">{field.replace(/_/g, ' ')}</span>
-                  </label>
-                ))}
-              </div>
-            ) : (
-              !loading && <p className="text-xs text-gray-600">No checklist data</p>
-            )}
-
-            {/* Actions */}
-            <div className="space-y-2">
-              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</p>
-              <div className="flex flex-wrap gap-2">
-                <button onClick={() => doAction('deliver')}
-                  className="text-xs px-3 py-1.5 bg-blue-900 hover:bg-blue-800 text-blue-100 rounded transition-colors">
-                  📤 Mark Delivered
-                </button>
-                <button onClick={() => doAction('review_held')}
-                  className="text-xs px-3 py-1.5 bg-green-900 hover:bg-green-800 text-green-100 rounded transition-colors">
-                  ✅ Review Held
-                </button>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <select value={newHand} onChange={e => setNewHand(e.target.value as HandOwnership)}
-                  className="text-xs bg-gray-900 border border-gray-700 rounded px-2 py-1 text-gray-200">
-                  <option value="designer">🟢 Designer</option>
-                  <option value="upworker">🟡 Upworker</option>
-                  <option value="client">🔵 Client</option>
-                </select>
-                <button onClick={() => doUpdate({ current_hand: newHand })}
-                  className="text-xs px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-200 rounded transition-colors">
-                  Flip Hand
-                </button>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <select value={newPhase} onChange={e => setNewPhase(e.target.value as DesignPhase)}
-                  className="text-xs bg-gray-900 border border-gray-700 rounded px-2 py-1 text-gray-200">
-                  {PHASES.map(ph => <option key={ph} value={ph}>{PHASE_LABELS[ph]}</option>)}
-                </select>
-                <button onClick={() => doUpdate({ current_phase: newPhase })}
-                  className="text-xs px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-200 rounded transition-colors">
-                  Set Phase
-                </button>
-              </div>
-            </div>
-
-            {/* Activity */}
-            {activity.length > 0 && (
-              <div className="space-y-1">
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Recent Activity</p>
-                {activity.map(a => (
-                  <p key={a.id} className="text-xs text-gray-500">
-                    <span className="text-gray-600">{new Date(a.created_at).toLocaleDateString()}</span> {a.description}
-                  </p>
-                ))}
-              </div>
-            )}
+        {/* ── BACK ──────────────────────────────────────────── */}
+        <div className="flip-back p-3" style={{ minHeight: 72 }}>
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="oswald font-semibold text-white" style={{ fontSize: 13 }}>{p.client_name}</h3>
+            <p style={{ fontSize: 9, color: '#4b5563' }}>double-click to flip back</p>
           </div>
-        )}
+
+          {p.client_email && (
+            <p style={{ fontSize: 11, color: '#60a5fa', marginBottom: 4 }}>✉ {p.client_email}</p>
+          )}
+          {p.client_phone && (
+            <p style={{ fontSize: 11, color: '#9ca3af', marginBottom: 8 }}>📞 {p.client_phone}</p>
+          )}
+
+          {p.notes && (
+            <div style={{ marginBottom: 8 }}>
+              <p className="oswald" style={{ fontSize: 9, color: '#4b5563', letterSpacing: '0.1em', marginBottom: 4 }}>NOTES</p>
+              <p style={{ fontSize: 11, color: '#6b7280', lineHeight: 1.5 }}>{p.notes}</p>
+            </div>
+          )}
+
+          {activity.length > 0 && (
+            <div>
+              <p className="oswald" style={{ fontSize: 9, color: '#4b5563', letterSpacing: '0.1em', marginBottom: 4 }}>RECENT ACTIVITY</p>
+              {activity.slice(0, 4).map(a => (
+                <div key={a.id} style={{ fontSize: 10, color: '#6b7280', marginBottom: 2 }}>
+                  <span style={{ color: '#374151' }}>{new Date(a.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                  {' — '}{a.description}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {activity.length === 0 && !p.client_email && !p.notes && (
+            <p style={{ fontSize: 11, color: '#374151' }}>No additional data</p>
+          )}
+        </div>
+
       </div>
     </div>
   )
