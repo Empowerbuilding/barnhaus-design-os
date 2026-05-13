@@ -31,7 +31,10 @@ export default function Home() {
       {/* Header */}
       <div className="border-b border-gray-800 px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <h1 className="oswald text-2xl font-bold tracking-widest text-white">🏗️ BARNHAUS SOLITAIRE</h1>
+          <div className="flex items-center gap-3">
+          <img src="/barnhaus-logo.png" alt="Barnhaus" className="h-8 w-auto" style={{ filter: "brightness(0) invert(1)" }} />
+          <h1 className="oswald text-2xl font-bold tracking-widest text-white">SOLITAIRE</h1>
+        </div>
           <div className="flex gap-2">
             <span className="badge badge-red">{burning.length} 🔥 Burning</span>
             <span className="badge badge-blue">{frozen.length} 🧊 Frozen</span>
