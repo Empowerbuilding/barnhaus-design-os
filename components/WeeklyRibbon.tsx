@@ -170,8 +170,8 @@ export default function WeeklyRibbon({ projects, onUpdate }: Props) {
   const totalRibbon = Object.values(dayMap).flat().length + Object.values(ghostMap).flat().length
 
   return (
-    <div style={{ borderBottom: '2px solid #1f2937', background: '#080808', flexShrink: 0, maxHeight: 180, display: 'flex', flexDirection: 'column' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 16px', borderBottom: '1px solid #111' }}>
+    <div style={{ borderBottom: '2px solid #1f2937', background: '#080808', flexShrink: 0, maxHeight: 160, display: 'flex', flexDirection: 'column' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '3px 16px', borderBottom: '1px solid #111' }}>
         <span className="oswald" style={{ fontSize: 10, color: '#374151', letterSpacing: '0.18em' }}>WEEKLY RIBBON</span>
         <span className="badge badge-amber" style={{ fontSize: 8 }}>ACTIVE WORKSPACE</span>
         <span style={{ fontSize: 9, color: '#374151' }}>{totalRibbon} cards · drag from deck below to confirm</span>
