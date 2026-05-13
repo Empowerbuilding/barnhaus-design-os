@@ -1,0 +1,38 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap');
+
+body {
+  background: #0a0a0a;
+  color: #e5e5e5;
+  font-family: 'Inter', sans-serif;
+}
+
+h1, h2, h3, .oswald {
+  font-family: 'Oswald', sans-serif;
+}
+
+.card {
+  background: #111111;
+  border: 1px solid #222222;
+  border-radius: 6px;
+}
+
+.burning { border-left: 4px solid #ef4444 !important; box-shadow: 0 0 12px rgba(239,68,68,0.2); }
+.frozen  { border-left: 4px solid #93c5fd !important; opacity: 0.75; }
+.designer{ border-left: 4px solid #22c55e; }
+.upworker{ border-left: 4px solid #eab308; }
+.client  { border-left: 4px solid #3b82f6; }
+
+.badge { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; letter-spacing: 0.5px; }
+.badge-green { background: #14532d; color: #86efac; }
+.badge-yellow { background: #713f12; color: #fde68a; }
+.badge-blue { background: #1e3a5f; color: #93c5fd; }
+.badge-red { background: #450a0a; color: #fca5a5; }
+.badge-gray { background: #1a1a1a; color: #9ca3af; }
+
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
