@@ -86,7 +86,7 @@ function RibbonCard({ p, isGhost, onVanish, onUpdate }: {
   return (
     <div
       className={`${cardClass}${isGhost ? ' card-ghost' : ''}${vanishing ? ' card-vanishing' : ''} p-2`}
-      style={{ height: 64, overflow: 'hidden', position: 'relative', cursor: isGhost ? 'grab' : 'default' }}
+      style={{ minHeight: 46, position: 'relative', cursor: isGhost ? 'grab' : 'default' }}
       draggable={isGhost}
       onDragStart={e => {
         e.dataTransfer.setData('ribbonProjectId', p.id)
@@ -98,7 +98,7 @@ function RibbonCard({ p, isGhost, onVanish, onUpdate }: {
         <span style={{ fontSize: 9 }}>{stateEmoji[state] || '⚪'}</span>
         <span className="oswald font-semibold text-white truncate mx-1" style={{ fontSize: 11, flex: 1 }}>{p.client_name}</span>
         {ticker.value !== null && (
-          <span style={{ color: ticker.color, fontFamily: 'Oswald', fontWeight: ticker.value < 0 ? 700 : 600, fontSize: 13, lineHeight: '1' }}>
+          <span style={{ color: ticker.color, fontFamily: 'Oswald', fontWeight: ticker.value < 0 ? 700 : 600, fontSize: 15 }}>
             {ticker.value}
           </span>
         )}
@@ -203,7 +203,7 @@ export default function WeeklyRibbon({ projects, onUpdate }: Props) {
               <div className="load-bar-track">
                 <div className="load-bar-fill" style={{ width: `${load * 100}%`, background: loadColor(load) }} />
               </div>
-              <div style={{ padding: '3px 6px', display: 'flex', flexDirection: 'column', gap: 3, overflowY: 'auto', maxHeight: 230 }}>
+              <div style={{ padding: '3px 6px', display: 'flex', flexDirection: 'column', gap: 3, overflowY: 'auto' }}>
                 {solids.length === 0 && ghosts.length === 0
                   ? <div style={{ fontSize: 9, color: '#1a1a1a', textAlign: 'center', paddingTop: 6 }}>—</div>
                   : <>
