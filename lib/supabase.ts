@@ -16,6 +16,7 @@ export interface Project {
   referral_status: ReferralStatus; referral_builder: string|null; momentum_streak: number
   notes: string|null; countdown_ticker: number|null; wait_ticker: number|null
   is_burning: boolean; is_frozen: boolean
+  ribbon_date: string | null; last_client_email_date: string | null
 }
 
 export interface ProjectPhase {
