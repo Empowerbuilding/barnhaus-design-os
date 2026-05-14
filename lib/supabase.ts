@@ -17,6 +17,7 @@ export interface Project {
   notes: string|null; countdown_ticker: number|null; wait_ticker: number|null
   is_burning: boolean; is_frozen: boolean
   ribbon_date: string | null; last_client_email_date: string | null
+  nudge_count: number; last_nudge_date: string | null
 }
 
 export interface ProjectPhase {
