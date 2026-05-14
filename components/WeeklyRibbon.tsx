@@ -24,9 +24,7 @@ function loadConfirmedForWeek(): Record<string, number> {
 function saveConfirmedForWeek(m: Record<string, number>) {
   localStorage.setItem(getWeekKey(), JSON.stringify(m))
 }
-// Legacy — kept for handleVanish compatibility
-function loadConfirmed(): Record<string, number> { return loadConfirmedForWeek() }
-function saveConfirmed(m: Record<string, number>) { saveConfirmedForWeek(m) }
+
 
 function getWeekDays() {
   const now = new Date()
@@ -201,7 +199,7 @@ export default function WeeklyRibbon({ projects, onUpdate }: Props) {
 
   const handleVanish = useCallback((id: string) => {
     setVanished(prev => { const s = new Set(prev); s.add(id); return s })
-    setConfirmed(prev => { const n = { ...prev }; delete n[id]; saveConfirmed(n); return n })
+    setConfirmed(prev => { const n = { ...prev }; delete n[id]; saveConfirmedForWeek(n); return n })
   }, [])
 
   const handleDrop = (e: React.DragEvent, dayIdx: number) => {
