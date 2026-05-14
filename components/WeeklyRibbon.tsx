@@ -45,7 +45,9 @@ function getWeekDays() {
 function autoSlotIndex(p: ProjectWithPhase, todayIndex: number): number | null {
   const state = getCardState(p, p.phase_data)
   if (p.is_burning || state === 'scheduled') return todayIndex
-  if ((state === 'designer' || state === 'upworker') && p.countdown_ticker !== null) {
+  if (state === 'designer' || state === 'upworker') {
+    // Always show designer/upworker cards in ribbon — even with no ticker
+    if (p.countdown_ticker === null) return todayIndex // no ticker = put in deck
     if (p.countdown_ticker <= 0) return todayIndex
     return Math.min(todayIndex + p.countdown_ticker, 6)
   }
