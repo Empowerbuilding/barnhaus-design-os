@@ -3,39 +3,104 @@ import type { Project } from './supabase'
 export type OnUpdate = () => Promise<void>
 
 export type CardState =
-  | 'burn'
   | 'freeze'
   | 'scheduled'
   | 'designer'
   | 'upworker'
   | 'client'
-  | 'client-cooling'  // 4-10d wait — haze building
+  | 'client-cooling'
 
 export interface PhaseData {
   review_scheduled: boolean
-  review_held: boolean
-  handoff_pending: boolean
-  draft_delivered: boolean
+  review_held:      boolean
+  handoff_pending:  boolean
+  polishing:        boolean
+  draft_delivered:  boolean
 }
 
-export const TASK_LABELS: Record<keyof PhaseData, string> = {
-  handoff_pending:  'Handoff to Upworker',
-  draft_delivered:  'Draft Delivered',
+// ── Per-phase checklist definitions ─────────────────────────────
+// Each entry: { field, label } in the order they should appear
+export type ChecklistField = keyof PhaseData
+
+export interface ChecklistItem {
+  field: ChecklistField
+  label: string
+}
+
+export const PHASE_CHECKLIST: Record<string, ChecklistItem[]> = {
+  concept_service: [
+    { field: 'review_scheduled', label: 'Kickoff Scheduled' },
+    { field: 'review_held',      label: 'Kickoff Completed' },
+    { field: 'draft_delivered',  label: 'Screenshots Delivered' },
+  ],
+  conceptual_design: [
+    { field: 'review_scheduled', label: 'Kickoff Scheduled' },
+    { field: 'review_held',      label: 'Kickoff Completed' },
+    { field: 'draft_delivered',  label: 'Screenshots Delivered' },
+  ],
+  draft_1: [
+    { field: 'review_scheduled', label: 'Feedback Received' },
+    { field: 'review_held',      label: 'Design Approved' },
+    { field: 'draft_delivered',  label: 'Draft 1 Delivered' },
+  ],
+  draft_2: [
+    { field: 'review_scheduled', label: 'Review Scheduled' },
+    { field: 'review_held',      label: 'Review Held' },
+    { field: 'handoff_pending',  label: 'Handoff to Upworker' },
+    { field: 'polishing',        label: 'Polishing' },
+    { field: 'draft_delivered',  label: 'Draft Delivered' },
+  ],
+  draft_3: [
+    { field: 'review_scheduled', label: 'Review Scheduled' },
+    { field: 'review_held',      label: 'Review Held' },
+    { field: 'handoff_pending',  label: 'Handoff to Upworker' },
+    { field: 'polishing',        label: 'Polishing' },
+    { field: 'draft_delivered',  label: 'Draft Delivered' },
+  ],
+  final_polish: [
+    { field: 'review_scheduled', label: 'Review Scheduled' },
+    { field: 'review_held',      label: 'Review Held' },
+    { field: 'polishing',        label: 'Polishing' },
+    { field: 'draft_delivered',  label: 'Final Delivered' },
+  ],
+}
+
+// Fallback for unknown phases
+export const DEFAULT_CHECKLIST: ChecklistItem[] = [
+  { field: 'review_scheduled', label: 'Review Scheduled' },
+  { field: 'review_held',      label: 'Review Held' },
+  { field: 'handoff_pending',  label: 'Handoff to Upworker' },
+  { field: 'polishing',        label: 'Polishing' },
+  { field: 'draft_delivered',  label: 'Draft Delivered' },
+]
+
+export function getChecklist(phase: string): ChecklistItem[] {
+  return PHASE_CHECKLIST[phase] ?? DEFAULT_CHECKLIST
+}
+
+// First unchecked item — for ribbon display
+export function getRibbonTask(phaseData: PhaseData | null | undefined, phase: string): ChecklistField | null {
+  if (!phaseData) return null
+  const items = getChecklist(phase)
+  for (const { field } of items) {
+    if (!phaseData[field]) return field
+  }
+  return null
+}
+
+// Legacy flat label map (used by ribbon card for display)
+export const TASK_LABELS: Record<ChecklistField, string> = {
   review_scheduled: 'Review Scheduled',
   review_held:      'Review Held',
+  handoff_pending:  'Handoff to Upworker',
+  polishing:        'Polishing',
+  draft_delivered:  'Draft Delivered',
 }
-
-// Which task to surface on ribbon (first unchecked in priority order)
-export const RIBBON_TASK_PRIORITY: (keyof PhaseData)[] = [
-  'handoff_pending',
-  'draft_delivered',
-  'review_scheduled',
-  'review_held',
-]
 
 export const PHASE_WEIGHT: Record<string, number> = {
   pre_design: 0.5,
-  concept: 1,
+  concept_service: 1,
+  conceptual_design: 1,
   draft_1: 2,
   draft_2: 2.5,
   draft_3: 2,
@@ -43,15 +108,22 @@ export const PHASE_WEIGHT: Record<string, number> = {
   engineering: 1.5,
 }
 
+// Phase durations in days
+export const PHASE_DURATION: Record<string, number> = {
+  concept_service:   14,
+  conceptual_design:  7,
+  draft_1:            7,
+  draft_2:           14,
+  draft_3:           14,
+  final_polish:      14,
+}
+
+// ── Card state — based on hand only; burn is a separate overlay ──
 export function getCardState(p: Project, phaseData: PhaseData | null | undefined): CardState {
   const hand = p.current_hand
-  const phase = phaseData
 
-  // Scheduled overrides everything — meeting locked, ticker paused
-  if (phase?.review_scheduled && !phase?.review_held) return 'scheduled'
-
-  // Burn — designer/upworker past deadline
-  if (p.is_burning) return 'burn'
+  // Scheduled: meeting booked, not yet held → purple, ticker paused
+  if (phaseData?.review_scheduled && !phaseData?.review_held) return 'scheduled'
 
   // Freeze — client held 10+ days
   if (p.is_frozen) return 'freeze'
@@ -66,7 +138,6 @@ export function getCardState(p: Project, phaseData: PhaseData | null | undefined
 
 export function getCardClass(state: CardState): string {
   switch (state) {
-    case 'burn':           return 'card card-burn'
     case 'freeze':         return 'card card-freeze'
     case 'scheduled':      return 'card card-scheduled'
     case 'designer':       return 'card card-designer'
@@ -79,29 +150,18 @@ export function getCardClass(state: CardState): string {
 
 export function getTicker(p: Project, state: CardState): { value: number | null; color: string } {
   switch (state) {
-    case 'burn':
-      return { value: p.countdown_ticker, color: '#ef4444' }
     case 'freeze':
     case 'client-cooling':
       return { value: p.wait_ticker, color: state === 'freeze' ? '#93c5fd' : '#60a5fa' }
     case 'scheduled':
       return { value: p.countdown_ticker, color: '#a855f7' }
     case 'designer':
-      return { value: p.countdown_ticker, color: '#22c55e' }
+      return { value: p.countdown_ticker, color: p.is_burning ? '#ef4444' : '#22c55e' }
     case 'upworker':
-      return { value: p.countdown_ticker, color: '#f59e0b' }
+      return { value: p.countdown_ticker, color: p.is_burning ? '#ef4444' : '#f59e0b' }
     case 'client':
       return { value: p.wait_ticker, color: '#38bdf8' }
     default:
       return { value: null, color: '#6b7280' }
   }
-}
-
-// Get the single most relevant task to surface on a ribbon card
-export function getRibbonTask(phaseData: PhaseData | null | undefined): keyof PhaseData | null {
-  if (!phaseData) return null
-  for (const key of RIBBON_TASK_PRIORITY) {
-    if (!phaseData[key]) return key
-  }
-  return null // all done
 }
