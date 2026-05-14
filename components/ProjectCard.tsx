@@ -46,6 +46,9 @@ export default function ProjectCard({ project: p, onUpdate, compact = false }: P
   const [newPhase, setNewPhase] = useState<DesignPhase>(p.current_phase)
   const [tickerDate, setTickerDate] = useState<string>(p.ticker_start_date ? p.ticker_start_date.slice(0,10) : '')
   const [tickerDays, setTickerDays] = useState<number>(p.ticker_duration_days ?? 14)
+  const [customMode, setCustomMode] = useState(false)
+  const [customTasks, setCustomTasks] = useState<Record<string,boolean>>({})
+  const [newTaskText, setNewTaskText] = useState('')
   const clickTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const isDragging = useRef(false)
   const backRef = useRef<HTMLDivElement>(null)
@@ -73,8 +76,47 @@ export default function ProjectCard({ project: p, onUpdate, compact = false }: P
     const data = await res.json()
     setActivity(data.activity || [])
     const cur = (data.phases || []).find((ph: ProjectPhase) => ph.phase_name === p.current_phase)
-    if (cur) setPhaseData(cur)
+    if (cur) {
+      setPhaseData(cur)
+      if (cur.tasks && Object.keys(cur.tasks).length > 0) {
+        setCustomTasks(cur.tasks)
+        setCustomMode(true)
+      }
+    }
   }, [p.id, p.current_phase])
+
+  const patchTasks = async (tasks: Record<string,boolean>) => {
+    await fetch(`/api/project/${p.id}/action`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'patch_tasks', phase_name: p.current_phase, tasks })
+    })
+    setCustomTasks(tasks)
+  }
+
+  const addCustomTask = async () => {
+    if (!newTaskText.trim()) return
+    const updated = { ...customTasks, [newTaskText.trim()]: false }
+    await patchTasks(updated)
+    setNewTaskText('')
+  }
+
+  const toggleCustomTask = async (key: string) => {
+    const updated = { ...customTasks, [key]: !customTasks[key] }
+    await patchTasks(updated)
+  }
+
+  const deleteCustomTask = async (key: string) => {
+    const updated = { ...customTasks }
+    delete updated[key]
+    await patchTasks(updated)
+  }
+
+  const clearCustomMode = async () => {
+    await patchTasks({})
+    setCustomMode(false)
+    setCustomTasks({})
+  }
 
   const handleClick = () => {
     // Don't register click if we just dragged
@@ -232,10 +274,41 @@ export default function ProjectCard({ project: p, onUpdate, compact = false }: P
             {expanded && (
               <div onClick={e => e.stopPropagation()} className="mt-3 pt-3 space-y-3" style={{ borderTop: '1px solid #1f2937' }}>
 
-                {/* Checklist */}
+                {/* Checklist / Custom Tasks */}
                 <div>
-                  <p className="oswald" style={{ fontSize: 9, color: '#374151', letterSpacing: '0.15em', marginBottom: 6 }}>CHECKLIST</p>
-                  {phaseData ? checklist : <p style={{ fontSize: 10, color: '#4b5563' }}>loading…</p>}
+                  <div className="flex items-center justify-between mb-1.5">
+                    <p className="oswald" style={{ fontSize: 9, color: '#374151', letterSpacing: '0.15em' }}>
+                      {customMode ? 'CUSTOM TASKS' : 'CHECKLIST'}
+                    </p>
+                    <button
+                      onClick={() => { if (customMode) clearCustomMode(); else setCustomMode(true) }}
+                      style={{ fontSize: 8, padding: '1px 5px', background: customMode ? '#7f1d1d' : '#111', color: customMode ? '#fca5a5' : '#4b5563', border: `1px solid ${customMode ? '#991b1b' : '#1f2937'}`, borderRadius: 3, cursor: 'pointer' }}>
+                      {customMode ? '✕ clear custom' : '+ custom'}
+                    </button>
+                  </div>
+                  {customMode ? (
+                    <div className="space-y-1.5">
+                      {Object.entries(customTasks).map(([key, done]) => (
+                        <div key={key} className="flex items-center gap-1.5">
+                          <input type="checkbox" checked={done} onChange={() => toggleCustomTask(key)} className="accent-green-500 w-4 h-4" />
+                          <span style={{ fontSize: 11, flex: 1, color: done ? '#22c55e' : '#9ca3af', textDecoration: done ? 'line-through' : 'none' }}>{key}</span>
+                          <button onClick={() => deleteCustomTask(key)} style={{ fontSize: 9, color: '#4b5563', background: 'none', border: 'none', cursor: 'pointer' }}>✕</button>
+                        </div>
+                      ))}
+                      <div className="flex gap-1 mt-1">
+                        <input
+                          value={newTaskText}
+                          onChange={e => setNewTaskText(e.target.value)}
+                          onKeyDown={e => { if (e.key === 'Enter') addCustomTask() }}
+                          placeholder="Add task…"
+                          style={{ fontSize: 10, flex: 1, background: '#0a0a0a', color: '#d1d5db', border: '1px solid #374151', borderRadius: 3, padding: '2px 6px' }}
+                        />
+                        <button onClick={addCustomTask} style={{ fontSize: 10, padding: '2px 8px', background: '#1f2937', color: '#9ca3af', border: '1px solid #374151', borderRadius: 3, cursor: 'pointer' }}>+</button>
+                      </div>
+                    </div>
+                  ) : (
+                    phaseData ? checklist : <p style={{ fontSize: 10, color: '#4b5563' }}>loading…</p>
+                  )}
                 </div>
 
                 {/* Flip hand */}
