@@ -3,6 +3,7 @@ import type { Project } from './supabase'
 export type OnUpdate = () => Promise<void>
 
 export type CardState =
+  | 'pre_kickoff'
   | 'freeze'
   | 'scheduled'
   | 'designer'
@@ -131,6 +132,9 @@ export function getCardState(p: Project, phaseData: PhaseData | null | undefined
   // Scheduled: meeting booked, not yet held → purple, ticker paused
   if (phaseData?.review_scheduled && !phaseData?.review_held) return 'scheduled'
 
+  // Pre-kickoff: concept/conceptual phases before kickoff is held → sales owns it, no hand
+  if ((p.current_phase === 'concept_service' || p.current_phase === 'conceptual_design') && !phaseData?.review_held) return 'pre_kickoff'
+
   // Freeze — client held 10+ days
   if (p.is_frozen) return 'freeze'
 
@@ -144,6 +148,7 @@ export function getCardState(p: Project, phaseData: PhaseData | null | undefined
 
 export function getCardClass(state: CardState): string {
   switch (state) {
+    case 'pre_kickoff':    return 'card card-pre-kickoff'
     case 'freeze':         return 'card card-freeze'
     case 'scheduled':      return 'card card-scheduled'
     case 'designer':       return 'card card-designer'
@@ -156,6 +161,8 @@ export function getCardClass(state: CardState): string {
 
 export function getTicker(p: Project, state: CardState): { value: number | null; color: string } {
   switch (state) {
+    case 'pre_kickoff':
+      return { value: null, color: '#6b7280' }
     case 'freeze':
     case 'client-cooling':
       return { value: p.wait_ticker, color: state === 'freeze' ? '#93c5fd' : '#60a5fa' }
