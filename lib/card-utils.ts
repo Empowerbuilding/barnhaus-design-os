@@ -158,8 +158,6 @@ export function getCardClass(state: CardState): string {
     case 'upworker':       return 'card card-upworker'
     case 'client-cooling': return 'card card-client-cooling'
     case 'client-fresh':   return 'card card-client-fresh'
-    case 'client-fresh':
-      return { value: p.wait_ticker, color: '#3b82f6' }
     case 'client':         return 'card card-client'
     default:               return 'card'
   }
@@ -178,6 +176,8 @@ export function getTicker(p: Project, state: CardState): { value: number | null;
       return { value: p.countdown_ticker, color: p.is_burning ? '#ef4444' : '#22c55e' }
     case 'upworker':
       return { value: p.countdown_ticker, color: p.is_burning ? '#ef4444' : '#f59e0b' }
+    case 'client-fresh':
+      return { value: p.wait_ticker, color: '#3b82f6' }
     case 'client-fresh':
       return { value: p.wait_ticker, color: '#3b82f6' }
     case 'client':
