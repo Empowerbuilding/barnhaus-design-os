@@ -283,6 +283,11 @@ export default function ProjectCard({ project: p, onUpdate, compact = false }: P
                 </div>
                   <button onClick={openNotes} title="View project notes" style={{ fontSize: 10, background: 'none', border: 'none', cursor: 'pointer', color: '#4b5563', padding: 0, lineHeight: 1, flexShrink: 0 }}>📄</button>
                 <div style={{ fontSize: 10, color: '#4b5563', fontFamily: 'Oswald', letterSpacing: '0.06em' }}>{PHASE_LABELS[p.current_phase].toUpperCase()}</div>
+                {(state === 'client' || state === 'client-cooling' || state === 'freeze') && p.last_client_email_date && (
+                  <div style={{ fontSize: 9, color: '#374151' }}>
+                    📬 {new Date(p.last_client_email_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                  </div>
+                )}
               </div>
               <div className="flex flex-col items-end gap-1 shrink-0">
                 <div className="flex items-center gap-1">
@@ -399,6 +404,11 @@ export default function ProjectCard({ project: p, onUpdate, compact = false }: P
             <p style={{ fontSize: 9, color: '#374151' }}>double-click → flip back</p>
           </div>
           {p.client_email && <p style={{ fontSize: 11, color: '#60a5fa', marginBottom: 4 }}>✉ {p.client_email}</p>}
+          {p.last_client_email_date && (
+            <p style={{ fontSize: 10, color: '#4b5563', marginBottom: 4 }}>
+              📬 Last heard: {new Date(p.last_client_email_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+            </p>
+          )}
           {p.client_phone && <p style={{ fontSize: 11, color: '#9ca3af', marginBottom: 8 }}>📞 {p.client_phone}</p>}
           {p.notes && (
             <div style={{ marginBottom: 8 }}>
