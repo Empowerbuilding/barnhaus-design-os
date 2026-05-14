@@ -1,7 +1,7 @@
 'use client'
 import { useMemo, useState, useCallback } from 'react'
 import type { Project } from '@/lib/supabase'
-import { getCardState, getCardClass, getTicker, getRibbonTask, PHASE_WEIGHT, TASK_LABELS, type PhaseData, type OnUpdate } from '@/lib/card-utils'
+import { getCardState, getCardClass, getTicker, getRibbonTask, PHASE_WEIGHT, TASK_LABELS, type PhaseData, type ChecklistField, type OnUpdate } from '@/lib/card-utils'
 import { PHASE_LABELS } from '@/lib/supabase'
 
 type ProjectWithPhase = Project & { phase_data?: PhaseData | null }
@@ -60,12 +60,12 @@ function RibbonCard({ p, isGhost, onVanish, onUnconfirm, onUpdate }: {
   const state = getCardState(p, localPhase)
   const cardClass = getCardClass(state)
   const ticker = getTicker(p, state)
-  const ribbonTask = getRibbonTask(localPhase)
+  const ribbonTask = getRibbonTask(localPhase, p.current_phase)
 
   const handleCheck = async (field: keyof PhaseData) => {
     setLocalPhase(prev => prev
       ? { ...prev, [field]: true }
-      : { review_scheduled: false, review_held: false, handoff_pending: false, draft_delivered: false, [field]: true }
+      : { review_scheduled: false, review_held: false, handoff_pending: false, polishing: false, draft_delivered: false, [field]: true }
     )
     setLoading(true)
     await fetch(`/api/project/${p.id}/action`, {
