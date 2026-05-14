@@ -5,7 +5,12 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
   const [proj, phases, activity] = await Promise.all([
     supabaseAdmin.from('v_pipeline_status').select('*').eq('id', params.id).single(),
     supabaseAdmin.from('project_phases').select('*').eq('project_id', params.id),
-    supabaseAdmin.from('project_activity').select('*').eq('project_id', params.id)
+    supabaseAdmin.from('project_activity')
+      .select('*')
+      .eq('project_id', params.id)
+      .not('event_type', 'in', '(TASK_CHECK,UPDATE,AUTO_FLIP,DAILY_UPDATE,SCHEDULED)')
+      .order('created_at', { ascending: false })
+      .limit(5)
       .order('created_at', { ascending: false }).limit(5),
   ])
 
