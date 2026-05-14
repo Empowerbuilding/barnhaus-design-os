@@ -38,13 +38,15 @@ body { background: var(--bg); color: #e5e7eb; font-family: 'Inter', sans-serif; 
   background: linear-gradient(160deg, #1c1002 0%, #0a0a0a 60%);
 }
 .card-client {
-  background: #0d0d0d;
-  border: 1px solid #1f2937;
+  background: #0d0f1a;
+  border: 1px solid #00bcd4;
+  box-shadow: 0 0 6px rgba(0,188,212,0.25), inset 0 0 12px rgba(0,188,212,0.04);
 }
 .card-client-fresh {
-  background: #0d0d0d;
-  border: 1px solid #1f2937;
-  opacity: 0.55;
+  background: #0d0f1a;
+  border: 1px solid #00bcd4;
+  box-shadow: 0 0 6px rgba(0,188,212,0.25), inset 0 0 12px rgba(0,188,212,0.04);
+  opacity: 0.6;
 }
 
 
@@ -195,8 +197,9 @@ body { background: var(--bg); color: #e5e7eb; font-family: 'Inter', sans-serif; 
 
 /* ── Client Cooling (4-10d haze) ─────────────────── */
 .card-client-cooling {
-  background: #0d0d0d;
-  border: 1px solid #1f2937;
+  background: #0d0f1a;
+  border: 1px solid #00bcd4;
+  box-shadow: 0 0 6px rgba(0,188,212,0.25), inset 0 0 12px rgba(0,188,212,0.04);
 }
 @keyframes cooling-haze {
   0%,100% { box-shadow: 0 0 8px rgba(56,189,248,0.06), inset 0 0 20px rgba(14,42,71,0.4); }
