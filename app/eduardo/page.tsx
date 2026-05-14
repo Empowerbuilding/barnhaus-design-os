@@ -9,7 +9,8 @@ const supabaseBrowser = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 )
 import type { PhaseData } from '@/lib/card-utils'
-import { getCardState } from '@/lib/card-utils'
+// @ts-ignore
+import type { } from '@/lib/card-utils'
 import ProjectCard from '@/components/ProjectCard'
 import WeeklyRibbon from '@/components/WeeklyRibbon'
 
