@@ -38,13 +38,13 @@ body { background: var(--bg); color: #e5e7eb; font-family: 'Inter', sans-serif; 
   background: linear-gradient(160deg, #1c1002 0%, #0a0a0a 60%);
 }
 .card-client {
-  border-color: #0284c7;
-  background: linear-gradient(160deg, #082032 0%, #0a0a0a 60%);
+  background: #0d0d0d;
+  border: 1px solid #1f2937;
 }
 .card-client-fresh {
-  background: #0c1829;
-  border: 1px solid #1e3a5f;
-  opacity: 0.65;
+  background: #0d0d0d;
+  border: 1px solid #1f2937;
+  opacity: 0.55;
 }
 
 
@@ -67,8 +67,9 @@ body { background: var(--bg); color: #e5e7eb; font-family: 'Inter', sans-serif; 
 
 /* ─── FREEZE STATE ───────────────────────────────────────────── */
 .card-freeze {
-  border-color: #93c5fd !important;
-  background: linear-gradient(160deg, #0c1a2e 0%, #0a0a0a 60%) !important;
+  background: #0d0d0d !important;
+  border: 1px solid #1f2937 !important;
+  opacity: 0.45 !important;
 }
 .card-freeze::before {
   content: '';
@@ -194,10 +195,8 @@ body { background: var(--bg); color: #e5e7eb; font-family: 'Inter', sans-serif; 
 
 /* ── Client Cooling (4-10d haze) ─────────────────── */
 .card-client-cooling {
-  background: linear-gradient(135deg, #0c1a2e 0%, #0f2240 60%, #0a1628 100%);
-  border: 1px solid #1e3a5f;
-  box-shadow: 0 0 12px rgba(56,189,248,0.08), inset 0 0 20px rgba(14,42,71,0.4);
-  animation: cooling-haze 4s ease-in-out infinite;
+  background: #0d0d0d;
+  border: 1px solid #1f2937;
 }
 @keyframes cooling-haze {
   0%,100% { box-shadow: 0 0 8px rgba(56,189,248,0.06), inset 0 0 20px rgba(14,42,71,0.4); }
