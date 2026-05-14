@@ -18,7 +18,6 @@ interface Props {
 export default function MicroTaskPanel({ onUpdate }: Props) {
   const [tasks, setTasks] = useState<MicroTask[]>([])
   const [input, setInput] = useState('')
-  const [loading, setLoading] = useState(false)
   const [adding, setAdding] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -44,7 +43,6 @@ export default function MicroTaskPanel({ onUpdate }: Props) {
   }
 
   const handleDone = async (id: string) => {
-    setLoading(true)
     await fetch(`/api/tasks/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
@@ -54,7 +52,6 @@ export default function MicroTaskPanel({ onUpdate }: Props) {
     setTasks(prev => prev.map(t => t.id === id ? { ...t, done: true } : t))
     setTimeout(async () => {
       await fetchTasks()
-      setLoading(false)
       if (onUpdate) onUpdate()
     }, 400)
   }
