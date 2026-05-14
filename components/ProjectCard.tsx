@@ -258,6 +258,7 @@ export default function ProjectCard({ project: p, onUpdate, compact = false }: P
 
   // ── FULL KANBAN CARD ──────────────────────────────────────────
   return (
+    <>
     <div className="flip-container"
       onClick={handleClick}
       draggable
@@ -424,8 +425,8 @@ export default function ProjectCard({ project: p, onUpdate, compact = false }: P
 
       </div>
     </div>
-  {/* ── PROJECT NOTES MODAL ──────────────────────────────────── */}
-  {notesOpen && (
+    {/* ── PROJECT NOTES MODAL ──────────────────────────────────── */}
+    {notesOpen && (
     <div
       onClick={() => setNotesOpen(false)}
       style={{
@@ -463,5 +464,6 @@ export default function ProjectCard({ project: p, onUpdate, compact = false }: P
       </div>
     </div>
   )}
+  </>
   )
 }
