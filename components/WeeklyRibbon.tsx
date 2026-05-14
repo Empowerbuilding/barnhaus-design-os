@@ -167,6 +167,21 @@ export default function WeeklyRibbon({ projects, onUpdate }: Props) {
   const { days, todayIndex } = useMemo(() => getWeekDays(), [])
   const [confirmed, setConfirmed] = useState<Record<string, number>>(loadConfirmedForWeek)
   const [vanished, setVanished] = useState<Set<string>>(new Set())
+
+  // Seed confirmed from Supabase ribbon_date for any card not already in localStorage
+  useEffect(() => {
+    const existing = loadConfirmedForWeek()
+    const weekDays = getWeekDays().days
+    let changed = false
+    const merged = { ...existing }
+    projects.forEach(p => {
+      if (merged[p.id] !== undefined || !p.ribbon_date) return
+      const rd = new Date(p.ribbon_date)
+      const match = weekDays.find(d => d.date.toDateString() === rd.toDateString())
+      if (match) { merged[p.id] = match.index; changed = true }
+    })
+    if (changed) { saveConfirmedForWeek(merged); setConfirmed(merged) }
+  }, [projects])
   const [dropTarget, setDropTarget] = useState<number | null>(null)
   const [dropFlash, setDropFlash] = useState<number | null>(null)
 
