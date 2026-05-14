@@ -37,6 +37,8 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
 
   if (body.current_phase) update.current_phase = body.current_phase
   if (body.notes !== undefined) update.notes = body.notes
+  if (body.ribbon_date !== undefined) update.ribbon_date = body.ribbon_date
+  if (body.last_client_email_date !== undefined) update.last_client_email_date = body.last_client_email_date
 
   // Manual ticker override
   if (body.ticker_start_date) update.ticker_start_date = body.ticker_start_date
