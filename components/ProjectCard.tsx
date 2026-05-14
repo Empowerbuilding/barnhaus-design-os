@@ -49,6 +49,10 @@ export default function ProjectCard({ project: p, onUpdate, compact = false }: P
   const [customMode, setCustomMode] = useState(false)
   const [customTasks, setCustomTasks] = useState<Record<string,boolean>>({})
   const [newTaskText, setNewTaskText] = useState('')
+  const [notesOpen, setNotesOpen] = useState(false)
+  const [notesContent, setNotesContent] = useState<string | null>(null)
+  const [notesLoading, setNotesLoading] = useState(false)
+  const [notesError, setNotesError] = useState<string | null>(null)
   const clickTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const isDragging = useRef(false)
   const backRef = useRef<HTMLDivElement>(null)
@@ -116,6 +120,24 @@ export default function ProjectCard({ project: p, onUpdate, compact = false }: P
     await patchTasks({})
     setCustomMode(false)
     setCustomTasks({})
+  }
+
+  const openNotes = async (e: React.MouseEvent) => {
+    e.stopPropagation()
+    setNotesOpen(true)
+    if (notesContent) return // already loaded
+    setNotesLoading(true)
+    setNotesError(null)
+    try {
+      const res = await fetch(`/api/project/${p.id}/notes`)
+      const data = await res.json()
+      if (data.error) setNotesError(data.error)
+      else setNotesContent(data.content)
+    } catch {
+      setNotesError('Failed to fetch notes')
+    } finally {
+      setNotesLoading(false)
+    }
   }
 
   const handleClick = () => {
@@ -258,6 +280,7 @@ export default function ProjectCard({ project: p, onUpdate, compact = false }: P
                   <span style={{ fontSize: 12 }}>{stateLabel[state]}</span>
                   <h3 className="oswald font-semibold text-white truncate" style={{ fontSize: 13, letterSpacing: '0.04em' }}>{p.client_name}</h3>
                 </div>
+                  <button onClick={openNotes} title="View project notes" style={{ fontSize: 10, background: 'none', border: 'none', cursor: 'pointer', color: '#4b5563', padding: 0, lineHeight: 1, flexShrink: 0 }}>📄</button>
                 <div style={{ fontSize: 10, color: '#4b5563', fontFamily: 'Oswald', letterSpacing: '0.06em' }}>{PHASE_LABELS[p.current_phase].toUpperCase()}</div>
               </div>
               <div className="flex flex-col items-end gap-1 shrink-0">
@@ -401,5 +424,44 @@ export default function ProjectCard({ project: p, onUpdate, compact = false }: P
 
       </div>
     </div>
+  {/* ── PROJECT NOTES MODAL ──────────────────────────────────── */}
+  {notesOpen && (
+    <div
+      onClick={() => setNotesOpen(false)}
+      style={{
+        position: 'fixed', inset: 0, zIndex: 1000,
+        background: 'rgba(0,0,0,0.85)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        padding: 24
+      }}>
+      <div
+        onClick={e => e.stopPropagation()}
+        style={{
+          background: '#0f0f0f', border: '1px solid #374151', borderRadius: 8,
+          width: '100%', maxWidth: 700, maxHeight: '85vh',
+          display: 'flex', flexDirection: 'column', overflow: 'hidden'
+        }}>
+        {/* Modal header */}
+        <div style={{ padding: '12px 16px', borderBottom: '1px solid #1f2937', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
+          <span className="oswald" style={{ fontSize: 14, letterSpacing: '0.1em', color: '#fff' }}>{p.client_name} — PROJECT NOTES</span>
+          <button onClick={() => setNotesOpen(false)} style={{ background: 'none', border: 'none', color: '#6b7280', cursor: 'pointer', fontSize: 16 }}>✕</button>
+        </div>
+        {/* Modal body */}
+        <div style={{ flex: 1, overflowY: 'auto', padding: '16px 20px' }}>
+          {notesLoading && <p style={{ color: '#4b5563', fontSize: 13 }}>Loading…</p>}
+          {notesError && <p style={{ color: '#ef4444', fontSize: 13 }}>⚠ {notesError}</p>}
+          {notesContent && (
+            <pre style={{
+              fontFamily: 'Inter, monospace', fontSize: 12, color: '#d1d5db',
+              lineHeight: 1.7, whiteSpace: 'pre-wrap', wordBreak: 'break-word', margin: 0
+            }}>{notesContent}</pre>
+          )}
+        </div>
+        <div style={{ padding: '8px 16px', borderTop: '1px solid #1f2937', flexShrink: 0 }}>
+          <span style={{ fontSize: 10, color: '#374151' }}>click outside to close · sourced from barnhaus-design-assistant/projects/{p.client_name}.md</span>
+        </div>
+      </div>
+    </div>
+  )}
   )
 }
