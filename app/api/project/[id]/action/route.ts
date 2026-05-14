@@ -95,5 +95,14 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     })
   }
 
+  if (action === 'patch_tasks') {
+    const { tasks } = body
+    await supabaseAdmin.from('project_phases').upsert(
+      { project_id: params.id, phase_name, tasks, updated_at: now },
+      { onConflict: 'project_id,phase_name' }
+    )
+    return NextResponse.json({ ok: true })
+  }
+
   return NextResponse.json({ error: 'Unknown action' }, { status: 400 })
 }
