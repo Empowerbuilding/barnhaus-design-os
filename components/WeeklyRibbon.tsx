@@ -12,12 +12,21 @@ interface Props {
 }
 
 const CONFIRMED_KEY = 'ribbon_confirmed'
-function loadConfirmed(): Record<string, number> {
-  try { return JSON.parse(localStorage.getItem(CONFIRMED_KEY) || '{}') } catch { return {} }
+function getWeekKey(): string {
+  const now = new Date()
+  const monday = new Date(now)
+  monday.setDate(now.getDate() - ((now.getDay() + 6) % 7))
+  return `ribbon-confirmed-${monday.toISOString().slice(0, 10)}`
 }
-function saveConfirmed(m: Record<string, number>) {
-  localStorage.setItem(CONFIRMED_KEY, JSON.stringify(m))
+function loadConfirmedForWeek(): Record<string, number> {
+  try { return JSON.parse(localStorage.getItem(getWeekKey()) || '{}') } catch { return {} }
 }
+function saveConfirmedForWeek(m: Record<string, number>) {
+  localStorage.setItem(getWeekKey(), JSON.stringify(m))
+}
+// Legacy — kept for handleVanish compatibility
+function loadConfirmed(): Record<string, number> { return loadConfirmedForWeek() }
+function saveConfirmed(m: Record<string, number>) { saveConfirmedForWeek(m) }
 
 function getWeekDays() {
   const now = new Date()
@@ -84,14 +93,21 @@ function RibbonCard({ p, isGhost, onVanish, onUnconfirm, onUpdate }: {
     burn: '🔥', freeze: '🧊', scheduled: '🟣', designer: '🟢', upworker: '🟡', client: '🔵', 'client-cooling': '🔵'
   }
 
+  const cardRef = useRef<HTMLDivElement>(null)
+
   return (
     <div
+      ref={cardRef}
       className={`${cardClass}${isGhost ? ' card-ghost' : ''}${vanishing ? ' card-vanishing' : ''} p-2`}
       style={{ height: 68, overflow: 'hidden', position: 'relative', cursor: isGhost ? 'grab' : 'default', flexShrink: 0 }}
-      draggable={isGhost}
+      draggable={isGhost || !isGhost}
       onDragStart={e => {
         e.dataTransfer.setData('ribbonProjectId', p.id)
         e.dataTransfer.effectAllowed = 'move'
+        // Use the card element itself as drag image to avoid 3D flip ghost artifacts
+        if (cardRef.current) {
+          e.dataTransfer.setDragImage(cardRef.current, 40, 20)
+        }
       }}
     >
       {loading && <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.3)', borderRadius: 4, zIndex: 10 }} />}
@@ -128,7 +144,7 @@ function RibbonCard({ p, isGhost, onVanish, onUnconfirm, onUpdate }: {
 
 export default function WeeklyRibbon({ projects, onUpdate }: Props) {
   const { days, todayIndex } = useMemo(() => getWeekDays(), [])
-  const [confirmed, setConfirmed] = useState<Record<string, number>>(loadConfirmed)
+  const [confirmed, setConfirmed] = useState<Record<string, number>>(loadConfirmedForWeek)
   const [vanished, setVanished] = useState<Set<string>>(new Set())
   const [dropTarget, setDropTarget] = useState<number | null>(null)
 
@@ -161,7 +177,7 @@ export default function WeeklyRibbon({ projects, onUpdate }: Props) {
   const loadColor = (l: number) => l > 0.8 ? '#ef4444' : l > 0.5 ? '#f59e0b' : '#22c55e'
 
   const handleConfirm = useCallback((id: string, dayIdx: number) => {
-    setConfirmed(prev => { const n = { ...prev, [id]: dayIdx }; saveConfirmed(n); return n })
+    setConfirmed(prev => { const n = { ...prev, [id]: dayIdx }; saveConfirmedForWeek(n); return n })
     // Persist ribbon_date to Supabase so Juanito can read it in briefings
     const monday = new Date(); monday.setDate(monday.getDate() - ((monday.getDay() + 6) % 7))
     const ribbonDate = new Date(monday); ribbonDate.setDate(monday.getDate() + dayIdx)
@@ -174,7 +190,7 @@ export default function WeeklyRibbon({ projects, onUpdate }: Props) {
   }, [])
 
   const handleUnconfirm = useCallback((id: string) => {
-    setConfirmed(prev => { const n = { ...prev }; delete n[id]; saveConfirmed(n); return n })
+    setConfirmed(prev => { const n = { ...prev }; delete n[id]; saveConfirmedForWeek(n); return n })
     // Clear ribbon_date in Supabase
     fetch(`/api/project/${id}`, {
       method: 'PATCH',
