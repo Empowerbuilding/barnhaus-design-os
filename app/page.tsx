@@ -162,8 +162,21 @@ export default function Home() {
               </div>
               <div style={{ flex: 1, overflowY: 'auto', padding: '8px 6px', display: 'flex', flexDirection: 'column', gap: 4 }}>
                 {projects.filter(p => p.current_phase === 'archived').map(p => (
-                  <div key={p.id} className="card" style={{ padding: '6px 8px' }}>
+                  <div key={p.id} className="card" style={{ padding: '6px 8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <p style={{ fontSize: 10, color: '#4b5563' }}>{p.client_name}</p>
+                    <button
+                      title="Restore to Concept"
+                      onClick={async () => {
+                        await fetch(`/api/project/${p.id}`, {
+                          method: 'PATCH',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ current_phase: 'concept_service' })
+                        })
+                        await load()
+                      }}
+                      style={{ fontSize: 9, padding: '2px 5px', background: '#111', color: '#4b5563', border: '1px solid #1f2937', borderRadius: 3, cursor: 'pointer' }}>
+                      ↑
+                    </button>
                   </div>
                 ))}
               </div>
