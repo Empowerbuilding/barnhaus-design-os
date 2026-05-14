@@ -88,6 +88,12 @@ export function getRibbonTask(phaseData: PhaseData | null | undefined, phase: st
   return null
 }
 
+// Phase-aware label for a given field — use this in ribbon instead of TASK_LABELS
+export function getRibbonTaskLabel(field: ChecklistField, phase: string): string {
+  const items = getChecklist(phase)
+  return items.find(i => i.field === field)?.label ?? TASK_LABELS[field]
+}
+
 // Legacy flat label map (used by ribbon card for display)
 export const TASK_LABELS: Record<ChecklistField, string> = {
   review_scheduled: 'Review Scheduled',
