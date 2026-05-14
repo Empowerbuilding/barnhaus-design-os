@@ -20,7 +20,7 @@ export interface Project {
 
 export interface ProjectPhase {
   id: string; project_id: string; phase_name: DesignPhase; tasks: Record<string,boolean>
-  review_scheduled: boolean; review_held: boolean; handoff_pending: boolean; draft_delivered: boolean
+  review_scheduled: boolean; review_held: boolean; handoff_pending: boolean; polishing: boolean; draft_delivered: boolean
 }
 
 export interface Activity {
