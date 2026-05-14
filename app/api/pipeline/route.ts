@@ -12,7 +12,7 @@ export async function GET() {
       .order('client_name', { ascending: true }),
     supabaseAdmin
       .from('project_phases')
-      .select('project_id, phase_name, review_scheduled, review_held, handoff_pending, draft_delivered')
+      .select('project_id, phase_name, review_scheduled, review_held, handoff_pending, polishing, draft_delivered')
   ])
 
   if (viewRes.error) return NextResponse.json({ error: viewRes.error.message }, { status: 500 })
