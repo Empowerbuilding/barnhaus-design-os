@@ -38,14 +38,12 @@ body { background: var(--bg); color: #e5e7eb; font-family: 'Inter', sans-serif; 
   background: linear-gradient(160deg, #1c1002 0%, #0a0a0a 60%);
 }
 .card-client {
-  background: linear-gradient(160deg, #0a1628 0%, #0a0a0a 100%);
-  border: 1px solid #1d4ed8;
-  box-shadow: 0 0 8px rgba(29,78,216,0.2);
+  border-color: #1d4ed8;
+  background: linear-gradient(160deg, #05122e 0%, #0a0a0a 60%);
 }
 .card-client-fresh {
-  background: linear-gradient(160deg, #0a1628 0%, #0a0a0a 100%);
-  border: 1px solid #1d4ed8;
-  box-shadow: 0 0 8px rgba(29,78,216,0.2);
+  border-color: #1d4ed8;
+  background: linear-gradient(160deg, #05122e 0%, #0a0a0a 60%);
   opacity: 0.55;
 }
 
@@ -197,9 +195,8 @@ body { background: var(--bg); color: #e5e7eb; font-family: 'Inter', sans-serif; 
 
 /* ── Client Cooling (4-10d haze) ─────────────────── */
 .card-client-cooling {
-  background: linear-gradient(160deg, #0a1628 0%, #0a0a0a 100%);
-  border: 1px solid #1d4ed8;
-  box-shadow: 0 0 8px rgba(29,78,216,0.2);
+  border-color: #1d4ed8;
+  background: linear-gradient(160deg, #05122e 0%, #0a0a0a 60%);
 }
 @keyframes cooling-haze {
   0%,100% { box-shadow: 0 0 8px rgba(56,189,248,0.06), inset 0 0 20px rgba(14,42,71,0.4); }
