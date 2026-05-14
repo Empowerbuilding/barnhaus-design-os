@@ -44,14 +44,16 @@ function getWeekDays() {
 
 function autoSlotIndex(p: ProjectWithPhase, todayIndex: number): number | null {
   const state = getCardState(p, p.phase_data)
+  // All active cards are draggable — none should be filtered out
+  if (p.current_phase === 'archived') return null
   if (p.is_burning || state === 'scheduled') return todayIndex
   if (state === 'designer' || state === 'upworker') {
-    // Always show designer/upworker cards in ribbon — even with no ticker
-    if (p.countdown_ticker === null) return todayIndex // no ticker = put in deck
+    if (p.countdown_ticker === null) return todayIndex
     if (p.countdown_ticker <= 0) return todayIndex
     return Math.min(todayIndex + p.countdown_ticker, 6)
   }
-  return null
+  // client, freeze, pre_kickoff — show in deck, draggable
+  return todayIndex
 }
 
 function RibbonCard({ p, isGhost, onVanish, onUnconfirm, onUpdate }: {
