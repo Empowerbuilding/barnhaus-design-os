@@ -1,7 +1,7 @@
 'use client'
 import { useMemo, useState, useCallback } from 'react'
 import type { Project } from '@/lib/supabase'
-import { getCardState, getCardClass, getTicker, getRibbonTask, PHASE_WEIGHT, TASK_LABELS, type PhaseData, type OnUpdate } from '@/lib/card-utils'
+import { getCardState, getCardClass, getTicker, getRibbonTask, getRibbonTaskLabel, PHASE_WEIGHT, TASK_LABELS, type PhaseData, type OnUpdate } from '@/lib/card-utils'
 import { PHASE_LABELS } from '@/lib/supabase'
 
 type ProjectWithPhase = Project & { phase_data?: PhaseData | null }
@@ -116,7 +116,7 @@ function RibbonCard({ p, isGhost, onVanish, onUnconfirm, onUpdate }: {
         {ribbonTask && !isGhost ? (
           <label className="flex items-center gap-1.5 cursor-pointer" onClick={e => e.stopPropagation()}>
             <input type="checkbox" checked={false} onChange={() => handleCheck(ribbonTask)} className="accent-green-500 w-3 h-3" />
-            <span style={{ fontSize: 9, color: '#6b7280' }}>{TASK_LABELS[ribbonTask]}</span>
+            <span style={{ fontSize: 9, color: '#6b7280' }}>{getRibbonTaskLabel(ribbonTask, p.current_phase)}</span>
           </label>
         ) : isGhost ? (
           <span style={{ fontSize: 8, color: '#374151', fontStyle: 'italic' }}>drag to confirm</span>
