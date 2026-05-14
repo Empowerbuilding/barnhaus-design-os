@@ -31,9 +31,16 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
   const body = await req.json()
   const now = new Date().toISOString()
   const update: Record<string, unknown> = { updated_at: now }
-  if (body.current_hand) { update.current_hand = body.current_hand; update.ticker_start_date = now }
+
+  // Hand flip — do NOT reset ticker (ticker is tied to meeting date, not hand)
+  if (body.current_hand) update.current_hand = body.current_hand
+
   if (body.current_phase) update.current_phase = body.current_phase
   if (body.notes !== undefined) update.notes = body.notes
+
+  // Manual ticker override
+  if (body.ticker_start_date) update.ticker_start_date = body.ticker_start_date
+  if (body.ticker_duration_days) update.ticker_duration_days = body.ticker_duration_days
 
   const { data, error } = await supabaseAdmin.from('projects').update(update).eq('id', params.id).select().single()
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
