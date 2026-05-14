@@ -58,6 +58,7 @@ export default function Home() {
       {/* ── HEADER ────────────────────────────────────────────── */}
       <div style={{ borderBottom: '1px solid #1f2937', padding: '10px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#080808', flexShrink: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/barnhaus-logo.png" alt="Barnhaus" style={{ height: 32, width: 'auto', filter: 'none' }} />
           <span className="oswald" style={{ fontSize: 20, fontWeight: 700, letterSpacing: '0.15em', color: 'white' }}>DESIGN OS</span>
           <div style={{ display: 'flex', gap: 6, marginLeft: 8 }}>
