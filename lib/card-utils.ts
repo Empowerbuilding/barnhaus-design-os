@@ -8,6 +8,7 @@ export type CardState =
   | 'scheduled'
   | 'designer'
   | 'upworker'
+  | 'client-fresh'
   | 'client'
   | 'client-cooling'
 
@@ -139,6 +140,8 @@ export function getCardState(p: Project, phaseData: PhaseData | null | undefined
   if (p.is_frozen) return 'freeze'
 
   // Client-cooling — 4-10 day haze
+  // client-fresh: client hand but zero boxes checked on current phase — work hasn't started
+  if (hand === 'client' && phaseData && !phaseData.review_scheduled && !phaseData.review_held && !phaseData.draft_delivered) return 'client-fresh'
   if (hand === 'client' && p.wait_ticker !== null && p.wait_ticker > 3) return 'client-cooling'
 
   if (hand === 'designer') return 'designer'
@@ -154,6 +157,9 @@ export function getCardClass(state: CardState): string {
     case 'designer':       return 'card card-designer'
     case 'upworker':       return 'card card-upworker'
     case 'client-cooling': return 'card card-client-cooling'
+    case 'client-fresh':   return 'card card-client-fresh'
+    case 'client-fresh':
+      return { value: p.wait_ticker, color: '#3b82f6' }
     case 'client':         return 'card card-client'
     default:               return 'card'
   }
@@ -172,6 +178,8 @@ export function getTicker(p: Project, state: CardState): { value: number | null;
       return { value: p.countdown_ticker, color: p.is_burning ? '#ef4444' : '#22c55e' }
     case 'upworker':
       return { value: p.countdown_ticker, color: p.is_burning ? '#ef4444' : '#f59e0b' }
+    case 'client-fresh':
+      return { value: p.wait_ticker, color: '#3b82f6' }
     case 'client':
       return { value: p.wait_ticker, color: '#38bdf8' }
     default:
