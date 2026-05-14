@@ -44,6 +44,8 @@ export default function ProjectCard({ project: p, onUpdate, compact = false }: P
   const [phaseData, setPhaseData] = useState<PhaseData | null>(p.phase_data || null)
   const [newHand, setNewHand] = useState<HandOwnership>(p.current_hand)
   const [newPhase, setNewPhase] = useState<DesignPhase>(p.current_phase)
+  const [tickerDate, setTickerDate] = useState<string>(p.ticker_start_date ? p.ticker_start_date.slice(0,10) : '')
+  const [tickerDays, setTickerDays] = useState<number>(p.ticker_duration_days ?? 14)
   const clickTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const isDragging = useRef(false)
   const backRef = useRef<HTMLDivElement>(null)
@@ -63,6 +65,8 @@ export default function ProjectCard({ project: p, onUpdate, compact = false }: P
 
   // Unlock glow: only when draft_delivered is checked (the real final handoff)
   const unlocked = phaseData?.draft_delivered ? ' card-unlocked' : ''
+  // Burning overlay: red border pulse on top of hand color
+  const burningClass = p.is_burning ? ' card-burning' : ''
 
   const fetchDetail = useCallback(async () => {
     const res = await fetch(`/api/project/${p.id}`)
@@ -144,7 +148,7 @@ export default function ProjectCard({ project: p, onUpdate, compact = false }: P
   }
 
   const stateLabel: Record<string, string> = {
-    freeze: '🧊', scheduled: '🟣', designer: '🟢', upworker: '🟡', client: '🔵', 'client-cooling': '🔵'
+    pre_kickoff: '⚪', freeze: '🧊', scheduled: '🟣', designer: '🟢', upworker: '🟡', client: '🔵', 'client-cooling': '🔵'
   }
 
   const checklist = (
@@ -203,7 +207,7 @@ export default function ProjectCard({ project: p, onUpdate, compact = false }: P
       <div className={`flip-inner${flipped ? ' flipped' : ''}`} style={flipHeight ? { height: flipHeight } : undefined}>
 
         {/* ── FRONT ─────────────────────────────────── */}
-        <div className={`flip-front ${cardClass}${unlocked}`} style={{ minHeight: 72 }}>
+        <div className={`flip-front ${cardClass}${unlocked}${burningClass}`} style={{ minHeight: 72 }}>
           {sparking && <div className="spark" />}
           <div className="p-3">
             <div className="flex items-start justify-between gap-2">
@@ -258,6 +262,27 @@ export default function ProjectCard({ project: p, onUpdate, compact = false }: P
                     style={{ fontSize: 11, padding: '3px 10px', background: '#1f2937', color: '#d1d5db', borderRadius: 4, border: '1px solid #374151', cursor: 'pointer' }}>
                     Set Phase
                   </button>
+                </div>
+
+                {/* Ticker edit */}
+                <div>
+                  <p className="oswald" style={{ fontSize: 9, color: '#374151', letterSpacing: '0.15em', marginBottom: 4 }}>SET TICKER</p>
+                  <div className="flex gap-1.5 flex-wrap items-center">
+                    <input
+                      type="date"
+                      value={tickerDate}
+                      onChange={e => setTickerDate(e.target.value)}
+                      style={{ fontSize: 11, background: '#111', color: '#d1d5db', border: '1px solid #374151', borderRadius: 4, padding: '3px 6px' }}
+                    />
+                    <select value={tickerDays} onChange={e => setTickerDays(Number(e.target.value))}
+                      style={{ fontSize: 11, background: '#111', color: '#d1d5db', border: '1px solid #374151', borderRadius: 4, padding: '3px 6px' }}>
+                      {[7,10,14,21,28].map(d => <option key={d} value={d}>{d}d</option>)}
+                    </select>
+                    <button onClick={() => doUpdate({ ticker_start_date: tickerDate, ticker_duration_days: tickerDays })}
+                      style={{ fontSize: 11, padding: '3px 10px', background: '#1f2937', color: '#d1d5db', borderRadius: 4, border: '1px solid #374151', cursor: 'pointer' }}>
+                      Save
+                    </button>
+                  </div>
                 </div>
 
                 {p.notes && (
