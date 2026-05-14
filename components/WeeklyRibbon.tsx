@@ -1,5 +1,5 @@
 'use client'
-import { useMemo, useState, useCallback } from 'react'
+import { useMemo, useState, useCallback, useRef } from 'react'
 import type { Project } from '@/lib/supabase'
 import { getCardState, getCardClass, getTicker, getRibbonTask, getRibbonTaskLabel, PHASE_WEIGHT, type PhaseData, type OnUpdate } from '@/lib/card-utils'
 import { PHASE_LABELS } from '@/lib/supabase'
@@ -11,7 +11,6 @@ interface Props {
   onUpdate: OnUpdate
 }
 
-const CONFIRMED_KEY = 'ribbon_confirmed'
 function getWeekKey(): string {
   const now = new Date()
   const monday = new Date(now)
