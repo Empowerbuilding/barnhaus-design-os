@@ -41,6 +41,12 @@ body { background: var(--bg); color: #e5e7eb; font-family: 'Inter', sans-serif; 
   border-color: #0284c7;
   background: linear-gradient(160deg, #082032 0%, #0a0a0a 60%);
 }
+.card-client-fresh {
+  background: #0c1829;
+  border: 1px solid #1e3a5f;
+  opacity: 0.65;
+}
+
 
 /* ─── BURN STATE ─────────────────────────────────────────────── */
 .card-burn {
