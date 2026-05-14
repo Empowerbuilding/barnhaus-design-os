@@ -2,7 +2,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
 import type { Project, ProjectPhase, Activity, DesignPhase, HandOwnership } from '@/lib/supabase'
 import { PHASES, PHASE_LABELS } from '@/lib/supabase'
-import { getCardState, getCardClass, getTicker, TASK_LABELS, type PhaseData, type OnUpdate } from '@/lib/card-utils'
+import { getCardState, getCardClass, getTicker, getChecklist, type PhaseData, type OnUpdate } from '@/lib/card-utils'
 
 interface Props {
   project: Project & { phase_data?: PhaseData | null }
@@ -111,7 +111,7 @@ export default function ProjectCard({ project: p, onUpdate, compact = false }: P
   const doCheck = async (field: keyof PhaseData, value: boolean) => {
     setPhaseData(prev => prev
       ? { ...prev, [field]: value }
-      : { review_scheduled: false, review_held: false, handoff_pending: false, draft_delivered: false, [field]: value }
+      : { review_scheduled: false, review_held: false, handoff_pending: false, polishing: false, draft_delivered: false, [field]: value }
     )
     setLoading(true)
     const res = await fetch(`/api/project/${p.id}/action`, {
@@ -144,19 +144,19 @@ export default function ProjectCard({ project: p, onUpdate, compact = false }: P
   }
 
   const stateLabel: Record<string, string> = {
-    burn: '🔥', freeze: '🧊', scheduled: '🟣', designer: '🟢', upworker: '🟡', client: '🔵'
+    freeze: '🧊', scheduled: '🟣', designer: '🟢', upworker: '🟡', client: '🔵', 'client-cooling': '🔵'
   }
 
   const checklist = (
     <div className="space-y-1.5">
-      {(Object.keys(TASK_LABELS) as (keyof PhaseData)[]).map(field => {
+      {getChecklist(p.current_phase).map(({ field, label }) => {
         const checked = !!(phaseData && phaseData[field])
         return (
           <label key={field} className="flex items-center gap-2 cursor-pointer" onClick={e => e.stopPropagation()}>
             <input type="checkbox" checked={checked} onChange={e => doCheck(field, e.target.checked)}
               className="accent-green-500 w-4 h-4" />
             <span style={{ fontSize: compact ? 10 : 11, color: checked ? '#22c55e' : '#9ca3af', textDecoration: checked ? 'line-through' : 'none' }}>
-              {TASK_LABELS[field]}
+              {label}
             </span>
           </label>
         )
@@ -215,7 +215,10 @@ export default function ProjectCard({ project: p, onUpdate, compact = false }: P
                 <div style={{ fontSize: 10, color: '#4b5563', fontFamily: 'Oswald', letterSpacing: '0.06em' }}>{PHASE_LABELS[p.current_phase].toUpperCase()}</div>
               </div>
               <div className="flex flex-col items-end gap-1 shrink-0">
-                <TickerBadge {...ticker} />
+                <div className="flex items-center gap-1">
+                  {p.is_burning && <span style={{ fontSize: 10 }}>🔥</span>}
+                  <TickerBadge {...ticker} />
+                </div>
                 <EngRefTags p={p} />
               </div>
             </div>
