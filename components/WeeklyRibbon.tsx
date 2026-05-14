@@ -162,10 +162,25 @@ export default function WeeklyRibbon({ projects, onUpdate }: Props) {
 
   const handleConfirm = useCallback((id: string, dayIdx: number) => {
     setConfirmed(prev => { const n = { ...prev, [id]: dayIdx }; saveConfirmed(n); return n })
+    // Persist ribbon_date to Supabase so Juanito can read it in briefings
+    const monday = new Date(); monday.setDate(monday.getDate() - ((monday.getDay() + 6) % 7))
+    const ribbonDate = new Date(monday); ribbonDate.setDate(monday.getDate() + dayIdx)
+    const dateStr = ribbonDate.toISOString().slice(0, 10)
+    fetch(`/api/project/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ribbon_date: dateStr })
+    }).catch(() => {})
   }, [])
 
   const handleUnconfirm = useCallback((id: string) => {
     setConfirmed(prev => { const n = { ...prev }; delete n[id]; saveConfirmed(n); return n })
+    // Clear ribbon_date in Supabase
+    fetch(`/api/project/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ribbon_date: null })
+    }).catch(() => {})
   }, [])
 
   const handleVanish = useCallback((id: string) => {
