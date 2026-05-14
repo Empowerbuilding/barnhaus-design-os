@@ -2,6 +2,12 @@
 import { useEffect, useState, useCallback } from 'react'
 import type { Project, DesignPhase } from '@/lib/supabase'
 import { PHASE_LABELS } from '@/lib/supabase'
+import { createClient } from '@supabase/supabase-js'
+
+const supabaseBrowser = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+)
 import type { PhaseData } from '@/lib/card-utils'
 import { getCardState } from '@/lib/card-utils'
 import ProjectCard from '@/components/ProjectCard'
@@ -36,6 +42,17 @@ export default function Home() {
   }, [])
 
   useEffect(() => { load() }, [load])
+
+  // Real-time sync — re-fetch when projects or phases change in Supabase
+  useEffect(() => {
+    const channel = supabaseBrowser
+      .channel('pipeline-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'projects' }, () => load())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'project_phases' }, () => load())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'project_activity' }, () => load())
+      .subscribe()
+    return () => { supabaseBrowser.removeChannel(channel) }
+  }, [load])
 
   const activeProjects = projects.filter(p => p.current_phase !== 'archived')
   const burning = projects.filter(p => p.is_burning)
