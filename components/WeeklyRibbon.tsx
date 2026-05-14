@@ -1,7 +1,7 @@
 'use client'
 import { useMemo, useState, useCallback } from 'react'
 import type { Project } from '@/lib/supabase'
-import { getCardState, getCardClass, getTicker, getRibbonTask, PHASE_WEIGHT, TASK_LABELS, type PhaseData, type ChecklistField, type OnUpdate } from '@/lib/card-utils'
+import { getCardState, getCardClass, getTicker, getRibbonTask, PHASE_WEIGHT, TASK_LABELS, type PhaseData, type OnUpdate } from '@/lib/card-utils'
 import { PHASE_LABELS } from '@/lib/supabase'
 
 type ProjectWithPhase = Project & { phase_data?: PhaseData | null }
