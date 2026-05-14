@@ -5,6 +5,7 @@ import { PHASE_LABELS } from '@/lib/supabase'
 import type { PhaseData } from '@/lib/card-utils'
 import { getCardState } from '@/lib/card-utils'
 import ProjectCard from '@/components/ProjectCard'
+import MicroTaskPanel from '@/components/MicroTaskPanel'
 import WeeklyRibbon from '@/components/WeeklyRibbon'
 
 type ProjectWithPhase = Project & { phase_data?: PhaseData | null }
@@ -93,11 +94,13 @@ export default function Home() {
       </div>
 
       {/* ── WEEKLY RIBBON (Layer 1) ───────────────────────────── */}
-      {ribbonOpen && !loading && (
-        <WeeklyRibbon projects={projects} onUpdate={load} />
-      )}
+      <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start', flex: 1, minHeight: 0 }}>
+        <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {ribbonOpen && !loading && (
+            <WeeklyRibbon projects={projects} onUpdate={load} />
+          )}
 
-      {/* ── PIPELINE BOARD (Layer 2) ──────────────────────────── */}
+          {/* ── PIPELINE BOARD (Layer 2) ──────────────────────────── */}
       {loading ? (
         <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <span className="oswald" style={{ color: '#374151', letterSpacing: '0.2em', fontSize: 14 }}>LOADING PIPELINE…</span>
@@ -184,6 +187,11 @@ export default function Home() {
           </div>
         </div>
       )}
-    </div>
+    
+        </div>
+        {/* ── MICRO TASK PANEL (right sidebar) ─────────────────── */}
+        <MicroTaskPanel onUpdate={load} />
+      </div>
+</div>
   )
 }
