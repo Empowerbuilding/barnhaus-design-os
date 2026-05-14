@@ -250,7 +250,7 @@ export default function WeeklyRibbon({ projects, onUpdate }: Props) {
           const isPast = day.index < todayIndex
           return (
             <div key={day.key}
-              className={`ribbon-day${day.isToday ? ' today' : ''}${dropTarget === day.index ? ' ribbon-day-drop-active' : ''}`}
+              className={`ribbon-day${day.isToday ? ' today' : ''}${dropTarget === day.index ? ' ribbon-day-drop-active' : ''}${dropFlash === day.index ? ' drop-flash-anim' : ''}`}
               style={{ padding: '4px 0', opacity: isPast ? 0.4 : 1, minWidth: 120, display: 'flex', flexDirection: 'column', maxHeight: 270 }}
               onDragOver={e => { e.preventDefault(); setDropTarget(day.index) }}
               onDragLeave={() => setDropTarget(null)}
