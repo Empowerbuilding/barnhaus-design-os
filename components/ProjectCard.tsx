@@ -340,6 +340,21 @@ export default function ProjectCard({ project: p, onUpdate, compact = false }: P
                   )}
                 </div>
 
+                {/* Assign to */}
+                <div className="flex gap-1.5 flex-wrap items-center">
+                  <p className="oswald" style={{ fontSize: 9, color: '#374151', letterSpacing: '0.15em', marginBottom: 0, marginRight: 4 }}>ASSIGN TO</p>
+                  {(['michael','eduardo','both'] as const).map(v => (
+                    <button key={v} onClick={() => doUpdate({ assigned_to: v })}
+                      style={{ fontSize: 10, padding: '3px 8px', borderRadius: 4, cursor: 'pointer',
+                        background: p.assigned_to === v ? '#B8860B' : '#111',
+                        color: p.assigned_to === v ? '#fff' : '#6b7280',
+                        border: `1px solid ${p.assigned_to === v ? '#B8860B' : '#1f2937'}`,
+                        fontFamily: 'Oswald', textTransform: 'capitalize' }}>
+                      {v}
+                    </button>
+                  ))}
+                </div>
+
                 {/* Flip hand */}
                 <div className="flex gap-1.5 flex-wrap">
                   <select value={newHand} onChange={e => setNewHand(e.target.value as HandOwnership)}

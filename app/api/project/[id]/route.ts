@@ -48,6 +48,7 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
   // Manual ticker override
   if (body.ticker_start_date) update.ticker_start_date = body.ticker_start_date
   if (body.ticker_duration_days) update.ticker_duration_days = body.ticker_duration_days
+  if (body.assigned_to) update.assigned_to = body.assigned_to
 
   const { data, error } = await supabaseAdmin.from('projects').update(update).eq('id', params.id).select().single()
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
