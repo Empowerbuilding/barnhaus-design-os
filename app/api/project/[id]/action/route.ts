@@ -1,6 +1,18 @@
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
-import { PHASE_DURATION } from '@/lib/card-utils'
+import { PHASE_DURATION, getChecklist } from '@/lib/card-utils'
+
+// Cascade: when a box is checked, all preceding boxes in the phase checklist are also checked
+function getCascadeFields(field: string, phase_name: string): Record<string, boolean> {
+  const items = getChecklist(phase_name)
+  const idx = items.findIndex(i => i.field === field)
+  if (idx <= 0) return {}
+  const cascade: Record<string, boolean> = {}
+  for (let i = 0; i < idx; i++) {
+    cascade[items[i].field] = true
+  }
+  return cascade
+}
 
 export async function POST(req: Request, { params }: { params: { id: string } }) {
   const body = await req.json()
@@ -8,14 +20,27 @@ export async function POST(req: Request, { params }: { params: { id: string } })
   const now = new Date().toISOString()
 
   if (action === 'check') {
-    // Upsert the checkbox
+    // Build upsert payload — include cascade if checking a box
+    const cascadeFields = value === true ? getCascadeFields(field, phase_name) : {}
+    const upsertPayload = {
+      project_id: params.id,
+      phase_name,
+      ...cascadeFields,
+      [field]: value,
+      updated_at: now,
+    }
+
     await supabaseAdmin.from('project_phases').upsert(
-      { project_id: params.id, phase_name, [field]: value, updated_at: now },
+      upsertPayload,
       { onConflict: 'project_id,phase_name' }
     )
+
+    const cascadeCount = Object.keys(cascadeFields).length
     await supabaseAdmin.from('project_activity').insert({
       project_id: params.id, event_type: 'TASK_CHECK',
-      description: `${field} → ${value}`
+      description: cascadeCount > 0
+        ? `${field} → ${value} (cascaded ${cascadeCount} preceding box${cascadeCount > 1 ? 'es' : ''})`
+        : `${field} → ${value}`
     })
 
     let handUpdate: Record<string, unknown> | null = null
@@ -34,31 +59,27 @@ export async function POST(req: Request, { params }: { params: { id: string } })
         description: `Review held → Designer hand, ${duration}d ticker starts`
       })
     } else if (field === 'handoff_pending' && value === true) {
-      // Handed to upworker — ticker does NOT reset (client promise stays)
       handUpdate = { current_hand: 'upworker', updated_at: now }
       await supabaseAdmin.from('project_activity').insert({
         project_id: params.id, event_type: 'AUTO_FLIP',
         description: 'Handoff to Upworker — ticker unchanged'
       })
     } else if (field === 'polishing' && value === true) {
-      // Upworker done, back to designer — ticker does NOT reset
       handUpdate = { current_hand: 'designer', updated_at: now }
       await supabaseAdmin.from('project_activity').insert({
         project_id: params.id, event_type: 'AUTO_FLIP',
         description: 'Polishing — back to Designer, ticker unchanged'
       })
     } else if (field === 'draft_delivered' && value === true) {
-      // Delivered to client — flip to client, start wait ticker
       handUpdate = { current_hand: 'client', ticker_start_date: now, updated_at: now }
       await supabaseAdmin.from('project_activity').insert({
         project_id: params.id, event_type: 'AUTO_FLIP',
         description: 'Draft delivered → Client hand'
       })
     } else if (field === 'review_scheduled' && value === true) {
-      // Scheduled: card turns purple, no hand change
       await supabaseAdmin.from('project_activity').insert({
         project_id: params.id, event_type: 'SCHEDULED',
-        description: 'Review scheduled — card thawed (purple)'
+        description: 'Review scheduled — card turns purple'
       })
     }
 
@@ -66,7 +87,12 @@ export async function POST(req: Request, { params }: { params: { id: string } })
       await supabaseAdmin.from('projects').update(handUpdate).eq('id', params.id)
     }
 
-    return NextResponse.json({ ok: true, auto_flip: !!handUpdate, new_hand: handUpdate?.current_hand ?? null })
+    return NextResponse.json({
+      ok: true,
+      auto_flip: !!handUpdate,
+      new_hand: handUpdate?.current_hand ?? null,
+      cascaded: Object.keys(cascadeFields)
+    })
   }
 
   return NextResponse.json({ error: 'Unknown action' }, { status: 400 })
