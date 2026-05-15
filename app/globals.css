@@ -43,8 +43,8 @@ body { background: var(--bg); color: #e5e7eb; font-family: 'Inter', sans-serif; 
 }
 .card-client-fresh {
   border-color: #1d4ed8;
-  background: linear-gradient(160deg, #05122e 0%, #0a0a0a 60%);
-  opacity: 0.55;
+  background: linear-gradient(160deg, #0a1a3a 0%, #0a0a0a 50%);
+  opacity: 0.85;
 }
 
 
