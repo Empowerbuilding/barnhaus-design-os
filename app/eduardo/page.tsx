@@ -11,6 +11,7 @@ const supabaseBrowser = createClient(
 import type { PhaseData } from '@/lib/card-utils'
 
 import ProjectCard from '@/components/ProjectCard'
+import MicroTaskPanel from '@/components/MicroTaskPanel'
 import WeeklyRibbon from '@/components/WeeklyRibbon'
 
 type ProjectWithPhase = Project & { phase_data?: PhaseData | null }
@@ -136,6 +137,7 @@ export default function EduardoPage() {
             </div>
           )}
         </div>
+        <MicroTaskPanel onUpdate={load} />
       </div>
     </div>
   )
