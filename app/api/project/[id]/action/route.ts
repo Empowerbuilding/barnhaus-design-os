@@ -77,10 +77,18 @@ export async function POST(req: Request, { params }: { params: { id: string } })
         description: 'Draft delivered → Client hand'
       })
     } else if (field === 'review_scheduled' && value === true) {
-      await supabaseAdmin.from('project_activity').insert({
-        project_id: params.id, event_type: 'SCHEDULED',
-        description: 'Review scheduled — card turns purple'
-      })
+      if (phase_name === 'draft_1') {
+        handUpdate = { current_hand: 'designer', updated_at: now }
+        await supabaseAdmin.from('project_activity').insert({
+          project_id: params.id, event_type: 'AUTO_FLIP',
+          description: 'Feedback received → Designer hand'
+        })
+      } else {
+        await supabaseAdmin.from('project_activity').insert({
+          project_id: params.id, event_type: 'SCHEDULED',
+          description: 'Review scheduled — card turns purple'
+        })
+      }
     }
 
     if (handUpdate) {

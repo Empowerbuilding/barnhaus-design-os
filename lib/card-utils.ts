@@ -131,7 +131,8 @@ export function getCardState(p: Project, phaseData: PhaseData | null | undefined
   const hand = p.current_hand
 
   // Scheduled: meeting booked, not yet held → purple, ticker paused
-  if (phaseData?.review_scheduled && !phaseData?.review_held) return 'scheduled'
+  // EXCEPTION: Draft 1 uses 'review_scheduled' for "Feedback Received", which should NOT turn it purple (remains designer's job to implement)
+  if (phaseData?.review_scheduled && !phaseData?.review_held && p.current_phase !== 'draft_1') return 'scheduled'
 
   // Pre-kickoff: concept/conceptual phases before kickoff is held → sales owns it, no hand
   if ((p.current_phase === 'concept_service' || p.current_phase === 'conceptual_design') && !phaseData?.review_held) return 'pre_kickoff'
