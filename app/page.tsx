@@ -175,7 +175,23 @@ export default function Home() {
             })}
 
             {/* Archived (dimmed) */}
-            <div style={{ flexShrink: 0, width: 150, opacity: 0.35, display: 'flex', flexDirection: 'column' }}>
+            <div 
+              onDragOver={e => { e.preventDefault(); e.currentTarget.style.opacity = '0.8'; e.currentTarget.style.background = '#111' }}
+              onDragLeave={e => { e.currentTarget.style.opacity = '0.35'; e.currentTarget.style.background = 'transparent' }}
+              onDrop={async e => {
+                e.preventDefault()
+                e.currentTarget.style.opacity = '0.35'
+                e.currentTarget.style.background = 'transparent'
+                const projectId = e.dataTransfer.getData('projectId')
+                if (!projectId) return
+                await fetch(`/api/project/${projectId}`, {
+                  method: 'PATCH',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ current_phase: 'archived' })
+                })
+                await load()
+              }}
+              style={{ flexShrink: 0, width: 150, opacity: 0.35, display: 'flex', flexDirection: 'column', transition: 'all 0.15s' }}>
               <div style={{ padding: '8px 10px', borderBottom: '1px solid #1a1a1a', background: '#080808', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <span className="oswald" style={{ fontSize: 10, color: '#4b5563', letterSpacing: '0.12em' }}>ARCHIVED</span>
                 <span className="badge badge-gray" style={{ fontSize: 9 }}>{projects.filter(p => p.current_phase === 'archived').length}</span>
