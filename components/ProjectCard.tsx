@@ -56,6 +56,7 @@ export default function ProjectCard({ project: p, onUpdate, compact = false }: P
   const clickTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const isDragging = useRef(false)
   const backRef = useRef<HTMLDivElement>(null)
+  const frontRef = useRef<HTMLDivElement>(null)
   const [flipHeight, setFlipHeight] = useState<number | undefined>(undefined)
 
   useEffect(() => {
@@ -266,13 +267,14 @@ export default function ProjectCard({ project: p, onUpdate, compact = false }: P
         isDragging.current = true
         e.dataTransfer.setData('projectId', p.id)
         e.dataTransfer.effectAllowed = 'move'
+        if (frontRef.current) e.dataTransfer.setDragImage(frontRef.current, 20, 20)
       }}
       onDragEnd={() => { setTimeout(() => { isDragging.current = false }, 50) }}
       style={{ cursor: 'grab' }}>
       <div className={`flip-inner${flipped ? ' flipped' : ''}`} style={flipHeight ? { height: flipHeight } : undefined}>
 
         {/* ── FRONT ─────────────────────────────────── */}
-        <div className={`flip-front ${cardClass}${unlocked}${burningClass}`} style={{ minHeight: 72 }}>
+        <div ref={frontRef} className={`flip-front ${cardClass}${unlocked}${burningClass}`} style={{ minHeight: 72 }}>
           {sparking && <div className="spark" />}
           <div className="p-3">
             <div className="flex items-start justify-between gap-2">

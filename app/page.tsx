@@ -134,17 +134,17 @@ export default function Home() {
                 <div key={phase}
                 onDragOver={e => { e.preventDefault(); e.currentTarget.style.background = '#111' }}
                 onDragLeave={e => { e.currentTarget.style.background = 'transparent' }}
-                onDrop={async e => {
+                onDrop={e => {
                   e.preventDefault()
                   e.currentTarget.style.background = 'transparent'
                   const projectId = e.dataTransfer.getData('projectId')
                   if (!projectId) return
-                  await fetch(`/api/project/${projectId}`, {
+                  setProjects(prev => prev.map(p => p.id === projectId ? { ...p, current_phase: phase } : p))
+                  fetch(`/api/project/${projectId}`, {
                     method: 'PATCH',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ current_phase: phase })
-                  })
-                  await load()
+                  }).then(() => load())
                 }}
                 style={{
                   flexShrink: 0, width: 220,
@@ -179,17 +179,17 @@ export default function Home() {
             <div 
               onDragOver={e => { e.preventDefault(); e.currentTarget.style.opacity = '0.8'; e.currentTarget.style.background = '#111' }}
               onDragLeave={e => { e.currentTarget.style.opacity = '0.35'; e.currentTarget.style.background = 'transparent' }}
-              onDrop={async e => {
+              onDrop={e => {
                 e.preventDefault()
                 e.currentTarget.style.opacity = '0.35'
                 e.currentTarget.style.background = 'transparent'
                 const projectId = e.dataTransfer.getData('projectId')
                 if (!projectId) return
                 
+                setProjects(prev => prev.map(p => p.id === projectId ? { ...p, current_phase: 'archived' } : p))
+
                 // Fire confetti explosion
                 const rect = e.currentTarget.getBoundingClientRect()
-                const x = (e.clientX - rect.left) / rect.width
-                const y = (e.clientY - rect.top) / rect.height
                 confetti({
                   particleCount: 80,
                   spread: 60,
@@ -197,12 +197,11 @@ export default function Home() {
                   colors: ['#4b5563', '#9ca3af', '#d1d5db', '#1f2937'] // Gray scale for archive
                 })
 
-                await fetch(`/api/project/${projectId}`, {
+                fetch(`/api/project/${projectId}`, {
                   method: 'PATCH',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({ current_phase: 'archived' })
-                })
-                await load()
+                }).then(() => load())
               }}
               style={{ flexShrink: 0, width: 150, opacity: 0.35, display: 'flex', flexDirection: 'column', transition: 'all 0.15s' }}>
               <div style={{ padding: '8px 10px', borderBottom: '1px solid #1a1a1a', background: '#080808', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
