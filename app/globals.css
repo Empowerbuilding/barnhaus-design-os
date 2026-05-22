@@ -42,7 +42,7 @@ body { background: var(--bg); color: #e5e7eb; font-family: 'Inter', sans-serif; 
   background: linear-gradient(160deg, #0f2847 0%, #0a0a0a 50%);
 }
 .card-client-fresh {
-  border-color: #1d4ed8;
+  border-color: #3b82f6;
   background: linear-gradient(160deg, #1e3a8a 0%, #0a0a0a 50%);
 }
 
