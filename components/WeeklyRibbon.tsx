@@ -166,23 +166,31 @@ export default function WeeklyRibbon({ projects, onUpdate }: Props) {
     // Wait for client-side hydration to match server to avoid discrepancies
     const existing = loadConfirmedForWeek()
     const weekDays = getWeekDays().days
-    let changed = false
-    const merged = { ...existing }
+    
+    // Completely rebuild merged object to prioritize database over local storage
+    const merged: Record<string, number> = {}
+    
+    // 1. First, trust the database (Supabase ribbon_date) unconditionally
     projects.forEach(p => {
-      if (merged[p.id] !== undefined || !p.ribbon_date) return
-      const [y, m, d] = p.ribbon_date.split('-').map(Number)
-      const rd = new Date(y, m - 1, d)
-      const match = weekDays.find(d => d.date.toDateString() === rd.toDateString())
-      if (match) { merged[p.id] = match.index; changed = true }
+      if (p.ribbon_date) {
+        const [y, m, d] = p.ribbon_date.split('-').map(Number)
+        const rd = new Date(y, m - 1, d)
+        const match = weekDays.find(d => d.date.toDateString() === rd.toDateString())
+        if (match) {
+          merged[p.id] = match.index
+        }
+      }
     })
-    // Only update state if something actually changed from what's in local storage
-    if (changed) { 
-      saveConfirmedForWeek(merged)
-      setConfirmed(merged)
-    } else {
-      // Force sync state with localStorage just in case they diverged
-      setConfirmed(existing)
-    }
+    
+    // 2. Backfill with any local storage items that aren't in the DB (for ghosts/unconfirmed)
+    Object.entries(existing).forEach(([id, dayIdx]) => {
+      if (merged[id] === undefined) {
+        merged[id] = dayIdx
+      }
+    })
+
+    saveConfirmedForWeek(merged)
+    setConfirmed(merged)
   }, [projects])
   const [dropTarget, setDropTarget] = useState<number | null>(null)
   const [dropFlash, setDropFlash] = useState<number | null>(null)
