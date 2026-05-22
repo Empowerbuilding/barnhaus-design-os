@@ -197,7 +197,8 @@ body { background: var(--bg); color: #e5e7eb; font-family: 'Inter', sans-serif; 
 .card-client-cooling {
   border-color: #1d4ed8;
   background: linear-gradient(160deg, #0f2847 0%, #0a0a0a 50%);
-  animation: cooling-haze 3s ease-in-out infinite;
+  animation: cooling-haze calc(3s + (var(--freeze-level, 0) * 20s)) ease-in-out infinite;
+  filter: saturate(calc(1 - var(--freeze-level, 0))) brightness(calc(1 + (var(--freeze-level, 0) * 0.8))) contrast(calc(1 - (var(--freeze-level, 0) * 0.2)));
 }
 @keyframes cooling-haze {
   0%,100% { box-shadow: 0 0 8px rgba(56,189,248,0.06), inset 0 0 20px rgba(14,42,71,0.4); }
