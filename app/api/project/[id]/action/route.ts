@@ -95,6 +95,21 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     })
   }
 
+  if (action === 'set_timeline') {
+    const { days } = body
+    await supabaseAdmin.from('projects').update({
+      ticker_start_date: now,
+      ticker_duration_days: days,
+      updated_at: now
+    }).eq('id', params.id)
+    
+    await supabaseAdmin.from('project_activity').insert({
+      project_id: params.id, event_type: 'TIMELINE_UPDATE',
+      description: `Client updated on timeline — ticker reset to ${days} days`
+    })
+    return NextResponse.json({ ok: true })
+  }
+
   if (action === 'patch_tasks') {
     const { tasks } = body
     await supabaseAdmin.from('project_phases').upsert(

@@ -68,21 +68,6 @@ function RibbonCard({ p, isGhost, onVanish, onUnconfirm, onUpdate }: {
   const [localPhase, setLocalPhase] = useState<PhaseData | null>(p.phase_data || null)
 
   const state = getCardState(p, localPhase)
-  // Show nudge task when ticker is low (≤3 days) and hand is designer/upworker
-  const showNudge = !isGhost && (state === 'designer' || state === 'upworker') &&
-    p.countdown_ticker !== null && p.countdown_ticker <= 3 && p.countdown_ticker > -5
-
-  const handleNudge = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    e.stopPropagation()
-    setLoading(true)
-    await fetch(`/api/project/${p.id}/action`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'nudge_ticker' })
-    })
-    setLoading(false)
-    onUpdate()
-  }
   const cardClass = getCardClass(state)
   const ticker = getTicker(p, state)
   const ribbonTask = getRibbonTask(localPhase, p.current_phase)
@@ -145,12 +130,7 @@ function RibbonCard({ p, isGhost, onVanish, onUnconfirm, onUpdate }: {
         {PHASE_LABELS[p.current_phase]?.toUpperCase()}
       </div>
       <div style={{ height: 16, display: 'flex', alignItems: 'center' }}>
-        {showNudge && !isGhost ? (
-          <label className="flex items-center gap-1.5 cursor-pointer nudge-task" onClick={e => e.stopPropagation()}>
-            <input type="checkbox" checked={false} onChange={handleNudge} className="w-3 h-3" style={{ accentColor: '#f59e0b' }} />
-            <span style={{ fontSize: 9, color: '#f59e0b' }}>📬 Update client on timeline</span>
-          </label>
-        ) : ribbonTask && !isGhost ? (
+        {ribbonTask && !isGhost ? (
           <label className="flex items-center gap-1.5 cursor-pointer" onClick={e => e.stopPropagation()}>
             <input type="checkbox" checked={false} onChange={() => handleCheck(ribbonTask)} className="accent-green-500 w-3 h-3" />
             <span style={{ fontSize: 9, color: '#6b7280' }}>{getRibbonTaskLabel(ribbonTask, p.current_phase)}</span>

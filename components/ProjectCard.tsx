@@ -49,6 +49,8 @@ export default function ProjectCard({ project: p, onUpdate, compact = false }: P
   const [customMode, setCustomMode] = useState(false)
   const [customTasks, setCustomTasks] = useState<Record<string,boolean>>({})
   const [newTaskText, setNewTaskText] = useState('')
+  const [timelineInputOpen, setTimelineInputOpen] = useState(false)
+  const [timelineDays, setTimelineDays] = useState('')
   const [notesOpen, setNotesOpen] = useState(false)
   const [notesContent, setNotesContent] = useState<string | null>(null)
   const [notesLoading, setNotesLoading] = useState(false)
@@ -230,6 +232,54 @@ export default function ProjectCard({ project: p, onUpdate, compact = false }: P
           </label>
         )
       })}
+      
+      {!compact && (state === 'designer' || state === 'upworker') && (
+        <div onClick={e => e.stopPropagation()} style={{ marginTop: 8, paddingTop: 8, borderTop: '1px dashed #374151' }}>
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" checked={timelineInputOpen} onChange={e => setTimelineInputOpen(e.target.checked)}
+              className="w-4 h-4" style={{ accentColor: '#f59e0b' }} />
+            <span style={{ 
+              fontSize: 11, 
+              color: (ticker.value !== null && ticker.value <= 3) ? '#f59e0b' : '#6b7280',
+              textShadow: (ticker.value !== null && ticker.value <= 3) ? '0 0 8px rgba(245,158,11,0.5)' : 'none',
+              transition: 'all 0.3s'
+            }}>
+              Update client on timeline
+            </span>
+          </label>
+          
+          {timelineInputOpen && (
+            <div className="flex items-center gap-2 mt-2 ml-6">
+              <input 
+                type="number" 
+                value={timelineDays} 
+                onChange={e => setTimelineDays(e.target.value)} 
+                placeholder="Days?"
+                className="w-16 bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs text-white outline-none"
+                onKeyDown={async e => {
+                  if (e.key === 'Enter') {
+                    const d = parseInt(timelineDays)
+                    if (isNaN(d)) return
+                    setLoading(true)
+                    await fetch(`/api/project/${p.id}/action`, {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ action: 'set_timeline', days: d })
+                    })
+                    setTimelineInputOpen(false)
+                    setTimelineDays('')
+                    setSparking(true)
+                    setTimeout(() => setSparking(false), 500)
+                    await onUpdate()
+                    setLoading(false)
+                  }
+                }}
+              />
+              <span style={{ fontSize: 10, color: '#6b7280' }}>Press enter to reset ticker</span>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   )
 
