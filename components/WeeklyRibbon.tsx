@@ -1,7 +1,7 @@
 'use client'
 import { useMemo, useState, useCallback, useRef, useEffect } from 'react'
 import type { Project } from '@/lib/supabase'
-import { getCardState, getCardClass, getTicker, getRibbonTask, getRibbonTaskLabel, PHASE_WEIGHT, type PhaseData, type OnUpdate } from '@/lib/card-utils'
+import { getCardState, getCardClass, getCardStyle, getTicker, getRibbonTask, getRibbonTaskLabel, PHASE_WEIGHT, type PhaseData, type OnUpdate } from '@/lib/card-utils'
 import { PHASE_LABELS } from '@/lib/supabase'
 
 type ProjectWithPhase = Project & { phase_data?: PhaseData | null }
@@ -69,6 +69,7 @@ function RibbonCard({ p, isGhost, onVanish, onUnconfirm, onUpdate }: {
 
   const state = getCardState(p, localPhase)
   const cardClass = getCardClass(state)
+  const cardStyle = getCardStyle(p, state)
   const ticker = getTicker(p, state)
   const ribbonTask = getRibbonTask(localPhase, p.current_phase)
 
@@ -100,7 +101,7 @@ function RibbonCard({ p, isGhost, onVanish, onUnconfirm, onUpdate }: {
     <div
       ref={cardRef}
       className={`${cardClass}${isGhost ? ' card-ghost' : ''}${vanishing ? ' card-vanishing' : ''} p-2`}
-      style={{ height: 68, overflow: 'hidden', position: 'relative', cursor: isGhost ? 'grab' : 'default', flexShrink: 0 }}
+      style={{ height: 68, overflow: 'hidden', position: 'relative', cursor: isGhost ? 'grab' : 'default', flexShrink: 0, ...cardStyle }}
       draggable={isGhost || !isGhost}
       onDragStart={e => {
         e.dataTransfer.setData('ribbonProjectId', p.id)

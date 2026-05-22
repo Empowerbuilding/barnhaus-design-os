@@ -2,7 +2,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
 import type { Project, ProjectPhase, Activity, DesignPhase, HandOwnership } from '@/lib/supabase'
 import { PHASES, PHASE_LABELS } from '@/lib/supabase'
-import { getCardState, getCardClass, getTicker, getChecklist, type PhaseData, type OnUpdate } from '@/lib/card-utils'
+import { getCardState, getCardClass, getCardStyle, getTicker, getChecklist, type PhaseData, type OnUpdate } from '@/lib/card-utils'
 
 interface Props {
   project: Project & { phase_data?: PhaseData | null }
@@ -71,6 +71,7 @@ export default function ProjectCard({ project: p, onUpdate, compact = false }: P
 
   const state = getCardState(p, phaseData)
   const cardClass = getCardClass(state)
+  const cardStyle = getCardStyle(p, state)
   const ticker = getTicker(p, state)
 
   // Unlock glow: only when draft_delivered is checked (the real final handoff)
@@ -347,7 +348,7 @@ export default function ProjectCard({ project: p, onUpdate, compact = false }: P
       <div className={`flip-inner${flipped ? ' flipped' : ''}`} style={flipHeight ? { height: flipHeight } : undefined}>
 
         {/* ── FRONT ─────────────────────────────────── */}
-        <div ref={frontRef} className={`flip-front ${cardClass}${unlocked}${burningClass}`} style={{ minHeight: 72 }}>
+        <div ref={frontRef} className={`flip-front ${cardClass}${unlocked}${burningClass}`} style={{ minHeight: 72, ...cardStyle }}>
           {sparking && <div className="spark" />}
           <div className="p-3">
             <div className="flex items-start justify-between gap-2">

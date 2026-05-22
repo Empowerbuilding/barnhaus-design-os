@@ -150,6 +150,15 @@ export function getCardState(p: Project, phaseData: PhaseData | null | undefined
   return 'client'
 }
 
+export function getCardStyle(p: Project, state: CardState) {
+  if (state === 'client-cooling' && p.wait_ticker !== null && p.wait_ticker >= 7) {
+    const daysFrozen = Math.min(Math.max(p.wait_ticker - 7, 0), 14) // 0 to 14 days (day 7 to 21)
+    const freezePercent = daysFrozen / 14
+    return { '--freeze-level': freezePercent } as React.CSSProperties
+  }
+  return {}
+}
+
 export function getCardClass(state: CardState): string {
   switch (state) {
     case 'pre_kickoff':    return 'card card-pre-kickoff'
