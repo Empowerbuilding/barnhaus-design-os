@@ -22,7 +22,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           pointerEvents: 'none',
           zIndex: 9999
         }}>
-          v1.0.2
+          v1.0.3
         </div>
       </body>
     </html>

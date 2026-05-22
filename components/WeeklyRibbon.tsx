@@ -11,14 +11,16 @@ interface Props {
   onUpdate: OnUpdate
 }
 
+function getCentralTimeDate() {
+  return new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Chicago' }))
+}
+
 function getWeekKey(): string {
-  // Use user's local timezone for date math
-  const now = new Date()
+  const now = getCentralTimeDate()
   const currentDay = now.getDay()
   const offset = currentDay === 0 ? 6 : currentDay - 1 // Monday = 0, Sunday = 6
   
-  const monday = new Date(now)
-  monday.setDate(now.getDate() - offset)
+  const monday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - offset)
   
   return `ribbon-confirmed-${monday.getFullYear()}-${(monday.getMonth()+1).toString().padStart(2, '0')}-${monday.getDate().toString().padStart(2, '0')}`
 }
@@ -29,9 +31,8 @@ function saveConfirmedForWeek(m: Record<string, number>) {
   localStorage.setItem(getWeekKey(), JSON.stringify(m))
 }
 
-
 function getWeekDays() {
-  const now = new Date()
+  const now = getCentralTimeDate()
   const currentDay = now.getDay()
   const offset = currentDay === 0 ? 6 : currentDay - 1 // Monday = 0, Sunday = 6
   
