@@ -267,7 +267,30 @@ export default function ProjectCard({ project: p, onUpdate, compact = false }: P
         isDragging.current = true
         e.dataTransfer.setData('projectId', p.id)
         e.dataTransfer.effectAllowed = 'move'
-        if (frontRef.current) e.dataTransfer.setDragImage(frontRef.current, 20, 20)
+        
+        if (frontRef.current) {
+          // Create a clean 2D clone to avoid 3D flip ghosting artifacts
+          const ghost = frontRef.current.cloneNode(true) as HTMLDivElement
+          // Remove 3D specific classes that cause Chrome to capture the backface
+          ghost.classList.remove('flip-front')
+          ghost.style.position = 'absolute'
+          ghost.style.top = '-9999px'
+          ghost.style.left = '-9999px'
+          ghost.style.width = `${frontRef.current.offsetWidth}px`
+          ghost.style.opacity = '1'
+          ghost.style.transform = 'none'
+          document.body.appendChild(ghost)
+          
+          // Get exact click position relative to the card so it feels like picking it up right where you clicked
+          const rect = frontRef.current.getBoundingClientRect()
+          const offsetX = e.clientX - rect.left
+          const offsetY = e.clientY - rect.top
+          
+          e.dataTransfer.setDragImage(ghost, offsetX, offsetY)
+          
+          // Clean up ghost after browser takes the snapshot
+          setTimeout(() => document.body.removeChild(ghost), 50)
+        }
       }}
       onDragEnd={() => { setTimeout(() => { isDragging.current = false }, 50) }}
       style={{ cursor: 'grab' }}>
