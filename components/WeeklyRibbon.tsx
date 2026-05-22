@@ -163,6 +163,7 @@ export default function WeeklyRibbon({ projects, onUpdate }: Props) {
 
   // Seed confirmed from Supabase ribbon_date for any card not already in localStorage
   useEffect(() => {
+    // Wait for client-side hydration to match server to avoid discrepancies
     const existing = loadConfirmedForWeek()
     const weekDays = getWeekDays().days
     let changed = false
@@ -174,7 +175,14 @@ export default function WeeklyRibbon({ projects, onUpdate }: Props) {
       const match = weekDays.find(d => d.date.toDateString() === rd.toDateString())
       if (match) { merged[p.id] = match.index; changed = true }
     })
-    if (changed) { saveConfirmedForWeek(merged); setConfirmed(merged) }
+    // Only update state if something actually changed from what's in local storage
+    if (changed) { 
+      saveConfirmedForWeek(merged)
+      setConfirmed(merged)
+    } else {
+      // Force sync state with localStorage just in case they diverged
+      setConfirmed(existing)
+    }
   }, [projects])
   const [dropTarget, setDropTarget] = useState<number | null>(null)
   const [dropFlash, setDropFlash] = useState<number | null>(null)
