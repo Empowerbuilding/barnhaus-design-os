@@ -66,21 +66,36 @@ body { background: var(--bg); color: #e5e7eb; font-family: 'Inter', sans-serif; 
 
 /* ─── FREEZE STATE ───────────────────────────────────────────── */
 .card-freeze {
-  background: #08121f !important;
-  border-color: #38bdf8 !important;
+  background: #0b1a30 !important;
+  border-color: #7dd3fc !important;
+  box-shadow: 0 0 15px rgba(56, 189, 248, 0.4), inset 0 0 20px rgba(56, 189, 248, 0.2) !important;
 }
 .card-freeze::after, .card-client-cooling::after {
   content: '';
   position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, rgba(224, 242, 254, 0.15) 0%, rgba(125, 211, 252, 0.25) 100%);
+  inset: -1px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.4) 0%, rgba(186, 230, 253, 0.1) 40%, rgba(125, 211, 252, 0.3) 100%);
   opacity: var(--freeze-level, 0);
   pointer-events: none;
   border-radius: inherit;
-  box-shadow: inset 0 0 0 1px rgba(125, 211, 252, calc(var(--freeze-level, 0) * 0.4)), inset 0 2px 8px rgba(255, 255, 255, calc(var(--freeze-level, 0) * 0.15));
-  backdrop-filter: grayscale(calc(var(--freeze-level, 0) * 0.8)) brightness(calc(1 + (var(--freeze-level, 0) * 0.2))) blur(calc(var(--freeze-level, 0) * 2px));
+  box-shadow: 
+    inset 0 2px 4px rgba(255, 255, 255, calc(var(--freeze-level, 0) * 0.8)), 
+    inset 0 -2px 6px rgba(14, 165, 233, calc(var(--freeze-level, 0) * 0.5)),
+    0 0 10px rgba(125, 211, 252, calc(var(--freeze-level, 0) * 0.3));
+  backdrop-filter: contrast(1.2) brightness(1.1);
   transition: opacity 0.5s;
   z-index: 10;
+}
+.card-freeze::before, .card-client-cooling::before {
+  content: '';
+  position: absolute;
+  top: -2px; left: 10%; right: 10%; height: 4px;
+  background: white;
+  border-radius: 4px;
+  filter: blur(1px);
+  opacity: calc(var(--freeze-level, 0) * 0.7);
+  pointer-events: none;
+  z-index: 11;
 }
 
 /* ─── SCHEDULED STATE ────────────────────────────────────────── */
