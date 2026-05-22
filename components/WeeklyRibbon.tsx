@@ -12,10 +12,15 @@ interface Props {
 }
 
 function getWeekKey(): string {
+  // Use user's local timezone for date math
   const now = new Date()
+  const currentDay = now.getDay()
+  const offset = currentDay === 0 ? 6 : currentDay - 1 // Monday = 0, Sunday = 6
+  
   const monday = new Date(now)
-  monday.setDate(now.getDate() - ((now.getDay() + 6) % 7))
-  return `ribbon-confirmed-${monday.toISOString().slice(0, 10)}`
+  monday.setDate(now.getDate() - offset)
+  
+  return `ribbon-confirmed-${monday.getFullYear()}-${(monday.getMonth()+1).toString().padStart(2, '0')}-${monday.getDate().toString().padStart(2, '0')}`
 }
 function loadConfirmedForWeek(): Record<string, number> {
   try { return JSON.parse(localStorage.getItem(getWeekKey()) || '{}') } catch { return {} }
@@ -27,16 +32,22 @@ function saveConfirmedForWeek(m: Record<string, number>) {
 
 function getWeekDays() {
   const now = new Date()
-  const dayOfWeek = now.getDay()
-  const monday = new Date(now)
-  monday.setDate(now.getDate() - ((dayOfWeek + 6) % 7))
-  monday.setHours(0, 0, 0, 0)
-  const todayIndex = (dayOfWeek + 6) % 7
+  const currentDay = now.getDay()
+  const offset = currentDay === 0 ? 6 : currentDay - 1 // Monday = 0, Sunday = 6
+  
+  const monday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - offset)
+  const todayIndex = offset
+  
   return {
     days: Array.from({ length: 7 }, (_, i) => {
-      const d = new Date(monday)
-      d.setDate(monday.getDate() + i)
-      return { date: d, label: d.toLocaleDateString('en-US', { weekday: 'short' }), key: d.toDateString(), isToday: d.toDateString() === now.toDateString(), index: i }
+      const d = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + i)
+      return { 
+        date: d, 
+        label: d.toLocaleDateString('en-US', { weekday: 'short' }), 
+        key: d.toDateString(), 
+        isToday: d.toDateString() === new Date(now.getFullYear(), now.getMonth(), now.getDate()).toDateString(), 
+        index: i 
+      }
     }),
     todayIndex
   }
