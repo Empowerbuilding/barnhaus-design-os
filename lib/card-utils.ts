@@ -151,9 +151,18 @@ export function getCardState(p: Project, phaseData: PhaseData | null | undefined
 }
 
 export function getCardStyle(p: Project, state: CardState) {
-  if (state === 'client-cooling' && p.wait_ticker !== null && p.wait_ticker >= 7) {
-    const daysFrozen = Math.min(Math.max(p.wait_ticker - 7, 0), 14) // 0 to 14 days (day 7 to 21)
-    const freezePercent = daysFrozen / 14
+  let freezePercent = 0;
+  if ((state === 'client-cooling' || state === 'freeze') && p.wait_ticker !== null) {
+    if (p.wait_ticker >= 21) {
+      freezePercent = 1;
+    } else if (p.wait_ticker >= 7) {
+      freezePercent = (p.wait_ticker - 7) / 14; // 0 to 1
+    }
+  } else if (state === 'freeze') {
+     freezePercent = 1; // max frost if manually frozen without ticker
+  }
+  
+  if (freezePercent > 0) {
     return { '--freeze-level': freezePercent } as React.CSSProperties
   }
   return {}

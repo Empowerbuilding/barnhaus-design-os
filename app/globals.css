@@ -43,8 +43,7 @@ body { background: var(--bg); color: #e5e7eb; font-family: 'Inter', sans-serif; 
 }
 .card-client-fresh {
   border-color: #1d4ed8;
-  background: linear-gradient(160deg, #0a1a3a 0%, #0a0a0a 50%);
-  opacity: 0.85;
+  background: linear-gradient(160deg, #1e3a8a 0%, #0a0a0a 50%);
 }
 
 
@@ -67,24 +66,20 @@ body { background: var(--bg); color: #e5e7eb; font-family: 'Inter', sans-serif; 
 
 /* ─── FREEZE STATE ───────────────────────────────────────────── */
 .card-freeze {
-  background: linear-gradient(160deg, #0a2a4a 0%, #0d1f35 60%, #0a0a0a 100%) !important;
-  border: 1px solid #1e4976 !important;
-  box-shadow: inset 0 0 20px rgba(30,73,118,0.3) !important;
+  background: linear-gradient(160deg, #0a2a4a 0%, #0a0a0a 60%) !important;
+  border-color: #3b82f6 !important;
 }
-.card-freeze::before {
+.card-freeze::after, .card-client-cooling::after {
   content: '';
   position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 2px;
-  background: linear-gradient(90deg, transparent, #bfdbfe, #93c5fd, #bfdbfe, transparent);
-  background-size: 200% 100%;
-  animation: frost-shimmer 3s linear infinite;
-  border-radius: 6px 6px 0 0;
-}
-@keyframes frost-shimmer {
-  0% { background-position: 200% 0; opacity: 0.7; }
-  50% { opacity: 1; }
-  100% { background-position: -200% 0; opacity: 0.7; }
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.05) 100%);
+  opacity: var(--freeze-level, 0);
+  pointer-events: none;
+  border-radius: inherit;
+  box-shadow: inset 0 0 30px rgba(255,255,255,calc(var(--freeze-level, 0) * 0.4));
+  border: 1px solid rgba(255,255,255,calc(var(--freeze-level, 0) * 0.5));
+  transition: opacity 0.5s;
 }
 
 /* ─── SCHEDULED STATE ────────────────────────────────────────── */
@@ -198,17 +193,6 @@ body { background: var(--bg); color: #e5e7eb; font-family: 'Inter', sans-serif; 
   border-color: #1d4ed8;
   background: linear-gradient(160deg, #0f2847 0%, #0a0a0a 50%);
   animation: cooling-haze calc(3s + (var(--freeze-level, 0) * 20s)) ease-in-out infinite;
-  /* Instead of filter, overlay a white frosting so it actually looks frozen */
-}
-.card-client-cooling::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: white;
-  opacity: calc(var(--freeze-level, 0) * 0.7);
-  pointer-events: none;
-  border-radius: inherit;
-  transition: opacity 0.5s;
 }
 @keyframes cooling-haze {
   0%,100% { box-shadow: 0 0 8px rgba(56,189,248,0.06), inset 0 0 20px rgba(14,42,71,0.4); }
