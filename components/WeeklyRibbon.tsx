@@ -169,7 +169,8 @@ export default function WeeklyRibbon({ projects, onUpdate }: Props) {
     const merged = { ...existing }
     projects.forEach(p => {
       if (merged[p.id] !== undefined || !p.ribbon_date) return
-      const rd = new Date(p.ribbon_date)
+      const [y, m, d] = p.ribbon_date.split('-').map(Number)
+      const rd = new Date(y, m - 1, d)
       const match = weekDays.find(d => d.date.toDateString() === rd.toDateString())
       if (match) { merged[p.id] = match.index; changed = true }
     })
@@ -212,14 +213,17 @@ export default function WeeklyRibbon({ projects, onUpdate }: Props) {
     setDropFlash(dayIdx)
     setTimeout(() => setDropFlash(null), 500)
     // Persist ribbon_date to Supabase so Juanito can read it in briefings
-    const monday = new Date(); monday.setDate(monday.getDate() - ((monday.getDay() + 6) % 7))
-    const ribbonDate = new Date(monday); ribbonDate.setDate(monday.getDate() + dayIdx)
-    const dateStr = ribbonDate.toISOString().slice(0, 10)
-    fetch(`/api/project/${id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ribbon_date: dateStr })
-    }).catch(() => {})
+    const weekDays = getWeekDays().days
+    const match = weekDays.find(d => d.index === dayIdx)
+    if (match) {
+      const rd = match.date
+      const dateStr = `${rd.getFullYear()}-${(rd.getMonth()+1).toString().padStart(2,'0')}-${rd.getDate().toString().padStart(2,'0')}`
+      fetch(`/api/project/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ribbon_date: dateStr })
+      }).catch(() => {})
+    }
   }, [])
 
   const handleUnconfirm = useCallback((id: string) => {
