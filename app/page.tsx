@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useState, useCallback } from 'react'
+import confetti from 'canvas-confetti'
 import type { Project, DesignPhase } from '@/lib/supabase'
 import { PHASE_LABELS } from '@/lib/supabase'
 import { createClient } from '@supabase/supabase-js'
@@ -184,6 +185,18 @@ export default function Home() {
                 e.currentTarget.style.background = 'transparent'
                 const projectId = e.dataTransfer.getData('projectId')
                 if (!projectId) return
+                
+                // Fire confetti explosion
+                const rect = e.currentTarget.getBoundingClientRect()
+                const x = (e.clientX - rect.left) / rect.width
+                const y = (e.clientY - rect.top) / rect.height
+                confetti({
+                  particleCount: 80,
+                  spread: 60,
+                  origin: { x: (rect.left + (rect.width/2)) / window.innerWidth, y: (rect.top + 40) / window.innerHeight },
+                  colors: ['#4b5563', '#9ca3af', '#d1d5db', '#1f2937'] // Gray scale for archive
+                })
+
                 await fetch(`/api/project/${projectId}`, {
                   method: 'PATCH',
                   headers: { 'Content-Type': 'application/json' },
