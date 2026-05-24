@@ -19,6 +19,7 @@ export interface Project {
   ribbon_date: string | null; last_client_email_date: string | null
   nudge_count: number; last_nudge_date: string | null
   assigned_to: "michael" | "eduardo" | "both"
+  milestones: Record<string, boolean>
 }
 
 export interface ProjectPhase {

@@ -40,7 +40,33 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
   // Hand flip — do NOT reset ticker (ticker is tied to meeting date, not hand)
   if (body.current_hand) update.current_hand = body.current_hand
 
-  if (body.current_phase) update.current_phase = body.current_phase
+  let milestonesToMerge: Record<string, boolean> | null = null;
+  if (body.milestones) milestonesToMerge = body.milestones;
+
+  if (body.current_phase) {
+    update.current_phase = body.current_phase
+    // Auto-check previous milestones when moving phases
+    const MILESTONE_CASCADE: Record<string, string[]> = {
+      conceptual_design: ['C'],
+      draft_1: ['C', 'SC'],
+      draft_2: ['C', 'SC', 'D1'],
+      draft_3: ['C', 'SC', 'D1', 'D2'],
+      final_polish: ['C', 'SC', 'D1', 'D2', 'D3'],
+      archived: ['C', 'SC', 'D1', 'D2', 'D3', 'F'],
+    }
+    const cascade = MILESTONE_CASCADE[body.current_phase];
+    if (cascade) {
+      milestonesToMerge = milestonesToMerge || {};
+      cascade.forEach(m => milestonesToMerge![m] = true);
+    }
+  }
+  
+  if (milestonesToMerge) {
+    const { data: proj } = await supabaseAdmin.from('projects').select('milestones').eq('id', params.id).single()
+    const currentMilestones = (proj?.milestones as Record<string, boolean>) || {}
+    update.milestones = { ...currentMilestones, ...milestonesToMerge }
+  }
+
   if (body.notes !== undefined) update.notes = body.notes
   if (body.ribbon_date !== undefined) update.ribbon_date = body.ribbon_date
   if (body.last_client_email_date !== undefined) update.last_client_email_date = body.last_client_email_date

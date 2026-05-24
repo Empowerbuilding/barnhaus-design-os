@@ -416,6 +416,41 @@ export default function ProjectCard({ project: p, onUpdate, compact = false }: P
                   )}
                 </div>
 
+                {/* Milestones */}
+                <div>
+                  <div className="flex gap-1 justify-between items-center" style={{ background: '#0a0a0a', padding: '4px', borderRadius: 4, border: '1px solid #1f2937' }}>
+                    {([
+                      { id: 'C', label: 'C' },
+                      { id: 'SC', label: 'SC' },
+                      { id: 'D1', label: 'D1' },
+                      { id: 'D2', label: 'D2' },
+                      { id: 'D3', label: 'D3' },
+                      { id: 'F', label: 'F' }
+                    ]).map(m => {
+                      const done = p.milestones && p.milestones[m.id];
+                      return (
+                        <button
+                          key={m.id}
+                          onClick={() => doUpdate({ milestones: { [m.id]: !done } })}
+                          style={{
+                            fontSize: 10, fontFamily: 'Oswald',
+                            padding: '2px 0',
+                            borderRadius: 3,
+                            background: done ? 'rgba(34,197,94,0.15)' : '#111',
+                            color: done ? '#4ade80' : '#4b5563',
+                            border: `1px solid ${done ? 'rgba(34,197,94,0.4)' : '#1f2937'}`,
+                            cursor: 'pointer',
+                            flex: 1,
+                            transition: 'all 0.2s'
+                          }}
+                        >
+                          {m.label}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+
                 {/* Assign to */}
                 <div className="flex gap-1.5 flex-wrap items-center">
                   <p className="oswald" style={{ fontSize: 9, color: '#374151', letterSpacing: '0.15em', marginBottom: 0, marginRight: 4 }}>ASSIGN TO</p>
