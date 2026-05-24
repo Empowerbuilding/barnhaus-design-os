@@ -15,7 +15,7 @@ export async function GET() {
       .select('project_id, phase_name, review_scheduled, review_held, handoff_pending, polishing, draft_delivered'),
     supabaseAdmin
       .from('projects')
-      .select('id, ribbon_date, last_client_email_date')
+      .select('id, ribbon_date, last_client_email_date, milestones')
   ])
 
   if (viewRes.error) return NextResponse.json({ error: viewRes.error.message }, { status: 500 })
@@ -25,7 +25,7 @@ export async function GET() {
   const projects = (viewRes.data || []).map((p: Record<string,unknown>) => {
     const phase = phases.find((ph) => ph.project_id === p.id && ph.phase_name === p.current_phase)
     const extra = extras.find((e) => e.id === p.id)
-    return { ...p, phase_data: phase || null, ribbon_date: extra?.ribbon_date ?? null, last_client_email_date: extra?.last_client_email_date ?? null }
+    return { ...p, phase_data: phase || null, ribbon_date: extra?.ribbon_date ?? null, last_client_email_date: extra?.last_client_email_date ?? null, milestones: extra?.milestones ?? {} }
   })
 
   return NextResponse.json(projects)
