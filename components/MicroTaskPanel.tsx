@@ -65,9 +65,9 @@ export default function MicroTaskPanel({ onUpdate }: Props) {
   }, {} as Record<string, MicroTask[]>)
 
   return (
-    <div style={{
-      width: 240, flexShrink: 0, background: '#0a0a0a', border: '1px solid #1f2937',
-      borderRadius: 8, display: 'flex', flexDirection: 'column', overflow: 'hidden', height: '100%'
+    <div className="w-full lg:w-[240px] shrink-0" style={{
+      background: '#0a0a0a', border: '1px solid #1f2937',
+      borderRadius: 8, display: 'flex', flexDirection: 'column', overflow: 'hidden', height: '100%', minHeight: 300
     }}>
       {/* Header */}
       <div style={{ padding: '10px 12px', borderBottom: '1px solid #1f2937', flexShrink: 0 }}>

@@ -75,19 +75,19 @@ export default function Home() {
     <div style={{ minHeight: '100vh', background: '#0a0a0a', display: 'flex', flexDirection: 'column' }}>
 
       {/* ── HEADER ────────────────────────────────────────────── */}
-      <div style={{ borderBottom: '1px solid #1f2937', padding: '10px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#080808', flexShrink: 0 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+      <div className="flex flex-col lg:flex-row items-center justify-between shrink-0 gap-3 lg:gap-0" style={{ borderBottom: '1px solid #1f2937', padding: '10px 20px', background: '#080808' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap', justifyContent: 'center' }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/barnhaus-logo.png" alt="Barnhaus" style={{ height: 32, width: 'auto', filter: 'none' }} />
           <span className="oswald" style={{ fontSize: 20, fontWeight: 700, letterSpacing: '0.15em', color: 'white' }}>DESIGN OS</span>
-          <div style={{ display: 'flex', gap: 6, marginLeft: 8 }}>
+          <div style={{ display: 'flex', gap: 6, marginLeft: 8, flexWrap: 'wrap' }}>
             <span className="badge badge-red">{burning.length} 🔥</span>
             <span className="badge badge-blue">{frozen.length} 🧊</span>
             {scheduled.length > 0 && <span className="badge badge-purple">{scheduled.length} 🟣</span>}
             <span className="badge badge-gray">{activeProjects.length} active</span>
           </div>
         </div>
-        <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center' }}>
           {(['all','burning','frozen','scheduled'] as const).map(f => (
             <button key={f} onClick={() => setFilter(f)} style={{
               fontSize: 11, padding: '4px 10px', borderRadius: 4, cursor: 'pointer',
@@ -112,7 +112,7 @@ export default function Home() {
       </div>
 
       {/* ── WEEKLY RIBBON (Layer 1) ───────────────────────────── */}
-      <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start', flex: 1, minHeight: 0 }}>
+      <div className="flex flex-col lg:flex-row gap-3 items-stretch lg:items-start flex-1 min-h-0" style={{ padding: '0 10px 10px 10px' }}>
         <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
           {ribbonOpen && !loading && (
             <WeeklyRibbon projects={projects} onUpdate={load} />
