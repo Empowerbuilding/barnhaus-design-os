@@ -68,7 +68,26 @@ export default function Home() {
     if (filter === 'burning') ps = ps.filter(p => p.is_burning)
     if (filter === 'frozen') ps = ps.filter(p => p.is_frozen)
     if (filter === 'scheduled') ps = ps.filter(p => getCardState(p, p.phase_data) === 'scheduled')
-    return ps
+    
+    const STATE_ORDER: Record<string, number> = {
+      'designer': 1,
+      'upworker': 2,
+      'scheduled': 3,
+      'client-fresh': 4,
+      'client': 4,
+      'client-cooling': 4,
+      'freeze': 5,
+      'pre_kickoff': 6
+    }
+
+    return ps.sort((a, b) => {
+      const stateA = getCardState(a, a.phase_data)
+      const stateB = getCardState(b, b.phase_data)
+      const orderA = STATE_ORDER[stateA] ?? 99
+      const orderB = STATE_ORDER[stateB] ?? 99
+      if (orderA !== orderB) return orderA - orderB
+      return (a.client_name || '').localeCompare(b.client_name || '')
+    })
   }
 
   return (
