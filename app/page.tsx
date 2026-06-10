@@ -86,6 +86,18 @@ export default function Home() {
       const orderA = STATE_ORDER[stateA] ?? 99
       const orderB = STATE_ORDER[stateB] ?? 99
       if (orderA !== orderB) return orderA - orderB
+      
+      // Both have the same state, now sort by ticker logic
+      if (stateA === 'designer' || stateA === 'upworker') {
+        const valA = a.countdown_ticker ?? 999
+        const valB = b.countdown_ticker ?? 999
+        if (valA !== valB) return valA - valB // Lowest ticker (closest to burn) first
+      } else if (stateA === 'client' || stateA === 'client-fresh' || stateA === 'client-cooling' || stateA === 'freeze') {
+        const valA = a.wait_ticker ?? 0
+        const valB = b.wait_ticker ?? 0
+        if (valA !== valB) return valA - valB // Lowest wait ticker (freshest) first
+      }
+
       return (a.client_name || '').localeCompare(b.client_name || '')
     })
   }

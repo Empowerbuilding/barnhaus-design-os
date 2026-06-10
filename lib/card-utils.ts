@@ -190,7 +190,7 @@ export function getTicker(p: Project, state: CardState): { value: number | null;
     case 'client-cooling':
       return { value: p.wait_ticker, color: state === 'freeze' ? '#93c5fd' : '#60a5fa' }
     case 'scheduled':
-      return { value: p.countdown_ticker, color: '#a855f7' }
+      return { value: null, color: '#a855f7' }
     case 'designer':
       return { value: p.countdown_ticker, color: p.is_burning ? '#ef4444' : '#22c55e' }
     case 'upworker':
