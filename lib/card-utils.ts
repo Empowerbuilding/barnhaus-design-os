@@ -104,6 +104,7 @@ export const TASK_LABELS: Record<ChecklistField, string> = {
   handoff_pending:  'Handoff to Upworker',
   polishing:        'Polishing',
   draft_delivered:  'Draft Delivered',
+  tasks:            'Tasks',
 }
 
 export const PHASE_WEIGHT: Record<string, number> = {
