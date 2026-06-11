@@ -395,39 +395,46 @@ export default function ProjectCard({ project: p, onUpdate, compact = false }: P
               <div onClick={e => e.stopPropagation()} className="mt-3 pt-3 space-y-3" style={{ borderTop: '1px solid #1f2937' }}>
 
                 {/* Checklist / Custom Tasks */}
-                <div>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <p className="oswald" style={{ fontSize: 9, color: '#374151', letterSpacing: '0.15em' }}>
-                      {customMode ? 'CUSTOM TASKS' : 'CHECKLIST'}
-                    </p>
-                    <button
-                      onClick={() => { if (customMode) clearCustomMode(); else setCustomMode(true) }}
-                      style={{ fontSize: 8, padding: '1px 5px', background: customMode ? '#7f1d1d' : '#111', color: customMode ? '#fca5a5' : '#4b5563', border: `1px solid ${customMode ? '#991b1b' : '#1f2937'}`, borderRadius: 3, cursor: 'pointer' }}>
-                      {customMode ? '✕ clear custom' : '+ custom'}
-                    </button>
+                <div className="space-y-3">
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <p className="oswald" style={{ fontSize: 9, color: '#374151', letterSpacing: '0.15em' }}>
+                        CHECKLIST
+                      </p>
+                      <button
+                        onClick={() => { if (customMode) clearCustomMode(); else setCustomMode(true) }}
+                        style={{ fontSize: 8, padding: '1px 5px', background: customMode ? '#7f1d1d' : '#111', color: customMode ? '#fca5a5' : '#4b5563', border: `1px solid ${customMode ? '#991b1b' : '#1f2937'}`, borderRadius: 3, cursor: 'pointer' }}>
+                        {customMode ? '✕ clear custom' : '+ custom'}
+                      </button>
+                    </div>
+                    {phaseData ? checklist : <p style={{ fontSize: 10, color: '#4b5563' }}>loading…</p>}
                   </div>
-                  {customMode ? (
-                    <div className="space-y-1.5">
-                      {Object.entries(customTasks).map(([key, done]) => (
-                        <div key={key} className="flex items-center gap-1.5">
-                          <input type="checkbox" checked={done} onChange={() => toggleCustomTask(key)} className="accent-green-500 w-4 h-4" />
-                          <span style={{ fontSize: 11, flex: 1, color: done ? '#22c55e' : '#9ca3af', textDecoration: done ? 'line-through' : 'none' }}>{key}</span>
-                          <button onClick={() => deleteCustomTask(key)} style={{ fontSize: 9, color: '#4b5563', background: 'none', border: 'none', cursor: 'pointer' }}>✕</button>
+
+                  {customMode && (
+                    <div style={{ paddingLeft: '4px', borderLeft: '2px solid #374151' }}>
+                      <p className="oswald mb-1.5" style={{ fontSize: 9, color: '#6b7280', letterSpacing: '0.15em' }}>
+                        ADDITIONAL TASKS
+                      </p>
+                      <div className="space-y-1.5">
+                        {Object.entries(customTasks).map(([key, done]) => (
+                          <div key={key} className="flex items-center gap-1.5">
+                            <input type="checkbox" checked={done} onChange={() => toggleCustomTask(key)} className="accent-green-500 w-4 h-4" />
+                            <span style={{ fontSize: 11, flex: 1, color: done ? '#22c55e' : '#9ca3af', textDecoration: done ? 'line-through' : 'none' }}>{key}</span>
+                            <button onClick={() => deleteCustomTask(key)} style={{ fontSize: 9, color: '#4b5563', background: 'none', border: 'none', cursor: 'pointer' }}>✕</button>
+                          </div>
+                        ))}
+                        <div className="flex gap-1 mt-1">
+                          <input
+                            value={newTaskText}
+                            onChange={e => setNewTaskText(e.target.value)}
+                            onKeyDown={e => { if (e.key === 'Enter') addCustomTask() }}
+                            placeholder="Add task…"
+                            style={{ fontSize: 10, flex: 1, background: '#0a0a0a', color: '#d1d5db', border: '1px solid #374151', borderRadius: 3, padding: '2px 6px' }}
+                          />
+                          <button onClick={addCustomTask} style={{ fontSize: 10, padding: '2px 8px', background: '#1f2937', color: '#9ca3af', border: '1px solid #374151', borderRadius: 3, cursor: 'pointer' }}>+</button>
                         </div>
-                      ))}
-                      <div className="flex gap-1 mt-1">
-                        <input
-                          value={newTaskText}
-                          onChange={e => setNewTaskText(e.target.value)}
-                          onKeyDown={e => { if (e.key === 'Enter') addCustomTask() }}
-                          placeholder="Add task…"
-                          style={{ fontSize: 10, flex: 1, background: '#0a0a0a', color: '#d1d5db', border: '1px solid #374151', borderRadius: 3, padding: '2px 6px' }}
-                        />
-                        <button onClick={addCustomTask} style={{ fontSize: 10, padding: '2px 8px', background: '#1f2937', color: '#9ca3af', border: '1px solid #374151', borderRadius: 3, cursor: 'pointer' }}>+</button>
                       </div>
                     </div>
-                  ) : (
-                    phaseData ? checklist : <p style={{ fontSize: 10, color: '#4b5563' }}>loading…</p>
                   )}
                 </div>
 
