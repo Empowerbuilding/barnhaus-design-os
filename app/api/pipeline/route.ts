@@ -12,7 +12,7 @@ export async function GET() {
       .order('client_name', { ascending: true }),
     supabaseAdmin
       .from('project_phases')
-      .select('project_id, phase_name, review_scheduled, review_held, handoff_pending, polishing, draft_delivered'),
+      .select('project_id, phase_name, review_scheduled, review_held, handoff_pending, polishing, draft_delivered, tasks'),
     supabaseAdmin
       .from('projects')
       .select('id, ribbon_date, last_client_email_date, milestones')

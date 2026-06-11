@@ -18,6 +18,7 @@ export interface PhaseData {
   handoff_pending:  boolean
   polishing:        boolean
   draft_delivered:  boolean
+  tasks?:           Record<string, boolean> | null
 }
 
 // ── Per-phase checklist definitions ─────────────────────────────

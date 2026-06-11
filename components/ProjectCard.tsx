@@ -46,8 +46,8 @@ export default function ProjectCard({ project: p, onUpdate, compact = false }: P
   const [newPhase, setNewPhase] = useState<DesignPhase>(p.current_phase)
   const [tickerDate, setTickerDate] = useState<string>(p.ticker_start_date ? p.ticker_start_date.slice(0,10) : '')
   const [tickerDays, setTickerDays] = useState<number>(p.ticker_duration_days ?? 14)
-  const [customMode, setCustomMode] = useState(false)
-  const [customTasks, setCustomTasks] = useState<Record<string,boolean>>({})
+  const [customMode, setCustomMode] = useState(p.phase_data?.tasks && Object.keys(p.phase_data.tasks).length > 0 ? true : false)
+  const [customTasks, setCustomTasks] = useState<Record<string,boolean>>(p.phase_data?.tasks || {})
   const [newTaskText, setNewTaskText] = useState('')
   const [timelineInputOpen, setTimelineInputOpen] = useState(false)
   const [timelineDays, setTimelineDays] = useState('')
@@ -60,6 +60,21 @@ export default function ProjectCard({ project: p, onUpdate, compact = false }: P
   const backRef = useRef<HTMLDivElement>(null)
   const frontRef = useRef<HTMLDivElement>(null)
   const [flipHeight, setFlipHeight] = useState<number | undefined>(undefined)
+
+  useEffect(() => {
+    // Sync external data changes to local state
+    if (p.phase_data) {
+      setPhaseData(p.phase_data)
+      const tasks = p.phase_data.tasks
+      if (tasks && Object.keys(tasks).length > 0) {
+        setCustomTasks(tasks)
+        setCustomMode(true)
+      } else {
+        setCustomTasks({})
+        setCustomMode(false)
+      }
+    }
+  }, [p.phase_data])
 
   useEffect(() => {
     if (flipped && backRef.current) {
