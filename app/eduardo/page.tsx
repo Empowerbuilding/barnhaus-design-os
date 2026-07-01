@@ -31,8 +31,7 @@ export default function EduardoPage() {
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       const data = await res.json()
       const all = Array.isArray(data) ? data : []
-      // Only show Eduardo's projects
-      setAllProjects(all.filter((p: ProjectWithPhase) => p.assigned_to === 'eduardo' || p.assigned_to === 'both'))
+      setAllProjects(all)
     } catch (err) {
       console.error('Pipeline fetch failed:', err)
       setAllProjects([])
