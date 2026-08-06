@@ -121,7 +121,7 @@ export default function Home() {
   }
 
   return (
-    <div style={{ height: '100vh', background: '#0a0a0a', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+    <div style={{ minHeight: '100vh', background: '#0a0a0a', display: 'flex', flexDirection: 'column' }}>
 
       {/* ── HEADER ────────────────────────────────────────────── */}
       <div className="flex flex-col lg:flex-row items-center justify-between shrink-0 gap-3 lg:gap-0" style={{ borderBottom: '1px solid #1f2937', padding: '10px 20px', background: '#080808' }}>
