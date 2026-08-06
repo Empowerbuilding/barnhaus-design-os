@@ -68,7 +68,7 @@ export default function Home() {
   const togglePhase = (phase: string) => {
     setOpenPhases(prev => {
       const next = new Set(prev)
-      next.has(phase) ? next.delete(phase) : next.add(phase)
+      if (next.has(phase)) { next.delete(phase) } else { next.add(phase) }
       return next
     })
   }
