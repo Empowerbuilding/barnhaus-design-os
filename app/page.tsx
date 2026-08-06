@@ -272,7 +272,7 @@ export default function Home() {
         ) : (
           <div style={{ flex: 1, display: 'flex', overflowX: 'auto', overflowY: 'hidden', minHeight: 0 }}>
             {/* Active phase columns */}
-            <div style={{ display: 'flex', overflowX: 'auto', flex: 1, alignItems: 'stretch' }}>
+            <div style={{ display: 'flex', alignItems: 'stretch', minWidth: 'max-content' }}>
               {DISPLAY_PHASES.map(phase => {
                 const ps = byPhase(phase)
                 const allForPhase = projects.filter(p => p.current_phase === phase)
