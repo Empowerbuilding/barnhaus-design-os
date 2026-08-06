@@ -25,6 +25,9 @@ export default function Home() {
   const [filter, setFilter] = useState<'all' | 'burning' | 'frozen' | 'scheduled'>('all')
   const [ribbonOpen, setRibbonOpen] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
+  const [openPhases, setOpenPhases] = useState<Set<string>>(new Set(DISPLAY_PHASES))
+  const [tasksOpen, setTasksOpen] = useState(false)
 
   const load = useCallback(async (): Promise<void> => {
     setRefreshing(true)
@@ -54,6 +57,21 @@ export default function Home() {
       .subscribe()
     return () => { supabaseBrowser.removeChannel(channel) }
   }, [load])
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768)
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
+
+  const togglePhase = (phase: string) => {
+    setOpenPhases(prev => {
+      const next = new Set(prev)
+      next.has(phase) ? next.delete(phase) : next.add(phase)
+      return next
+    })
+  }
 
   const activeProjects = projects.filter(p => p.current_phase !== 'archived')
   const burning = projects.filter(p => p.is_burning)
@@ -118,7 +136,7 @@ export default function Home() {
             <span className="badge badge-gray">{activeProjects.length} active</span>
           </div>
         </div>
-        <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center' }}>
+        <div style={{ display: 'flex', gap: 6, alignItems: 'center', overflowX: 'auto', flexShrink: 0, paddingBottom: isMobile ? 4 : 0 }}>
           {(['all','burning','frozen','scheduled'] as const).map(f => (
             <button key={f} onClick={() => setFilter(f)} style={{
               fontSize: 11, padding: '4px 10px', borderRadius: 4, cursor: 'pointer',
@@ -142,132 +160,230 @@ export default function Home() {
         </div>
       </div>
 
-      {/* ── WEEKLY RIBBON (Layer 1) ───────────────────────────── */}
-      <div className="flex flex-col lg:flex-row gap-3 items-stretch lg:items-start flex-1 min-h-0" style={{ padding: '0 10px 10px 10px' }}>
-        <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {ribbonOpen && !loading && (
-            <WeeklyRibbon projects={projects} onUpdate={load} />
+      {isMobile ? (
+        <div style={{ padding: '8px', display: 'flex', flexDirection: 'column', gap: 8, overflowY: 'auto' }}>
+          {/* Mobile ribbon (collapsible, hidden by default on mobile) */}
+          {ribbonOpen && !loading && <WeeklyRibbon projects={projects} onUpdate={load} />}
+
+          {/* Mobile accordion pipeline */}
+          {loading ? (
+            <div style={{ padding: 32, textAlign: 'center' }}>
+              <span className="oswald" style={{ color: '#374151', letterSpacing: '0.2em', fontSize: 14 }}>LOADING…</span>
+            </div>
+          ) : (
+            <>
+              {DISPLAY_PHASES.map(phase => {
+                const ps = byPhase(phase)
+                const allForPhase = projects.filter(p => p.current_phase === phase)
+                const isOpen = openPhases.has(phase)
+                const hasBurning = ps.some(p => p.is_burning)
+                return (
+                  <div key={phase} style={{ border: `1px solid ${hasBurning ? '#7f1d1d' : '#1f2937'}`, borderRadius: 6, overflow: 'hidden' }}>
+                    <button
+                      onClick={() => togglePhase(phase)}
+                      style={{
+                        width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                        padding: '11px 14px', background: hasBurning ? '#1a0505' : '#080808',
+                        border: 'none', cursor: 'pointer', color: '#fff'
+                      }}
+                    >
+                      <span className="oswald" style={{ fontSize: 12, letterSpacing: '0.12em', color: hasBurning ? '#fca5a5' : '#9ca3af' }}>
+                        {PHASE_LABELS[phase].toUpperCase()}
+                        {hasBurning && ' 🔥'}
+                      </span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <span className="badge badge-gray" style={{ fontSize: 9 }}>{allForPhase.length}</span>
+                        <span style={{ color: '#4b5563', fontSize: 12 }}>{isOpen ? '▲' : '▼'}</span>
+                      </div>
+                    </button>
+                    {isOpen && (
+                      <div style={{ padding: '8px', display: 'flex', flexDirection: 'column', gap: 6, background: '#0a0a0a' }}>
+                        {ps.length === 0 ? (
+                          <p style={{ fontSize: 10, color: '#374151', textAlign: 'center', padding: '12px 0' }}>—</p>
+                        ) : (
+                          ps.map(p => <ProjectCard key={p.id} project={p} onUpdate={load} />)
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+
+              {/* Archived - collapsed by default */}
+              <div style={{ border: '1px solid #111', borderRadius: 6, overflow: 'hidden', opacity: 0.5 }}>
+                <button
+                  onClick={() => togglePhase('archived')}
+                  style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: '#050505', border: 'none', cursor: 'pointer' }}
+                >
+                  <span className="oswald" style={{ fontSize: 11, letterSpacing: '0.12em', color: '#4b5563' }}>ARCHIVED</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span className="badge badge-gray" style={{ fontSize: 9 }}>{projects.filter(p => p.current_phase === 'archived').length}</span>
+                    <span style={{ color: '#374151', fontSize: 12 }}>{openPhases.has('archived') ? '▲' : '▼'}</span>
+                  </div>
+                </button>
+                {openPhases.has('archived') && (
+                  <div style={{ padding: '8px', display: 'flex', flexDirection: 'column', gap: 4, background: '#050505' }}>
+                    {projects.filter(p => p.current_phase === 'archived').map(p => (
+                      <div key={p.id} className="card" style={{ padding: '8px 10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <p style={{ fontSize: 11, color: '#4b5563' }}>{p.client_name}</p>
+                        <button
+                          onClick={async () => {
+                            await fetch(`/api/project/${p.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ current_phase: 'concept_service' }) })
+                            await load()
+                          }}
+                          style={{ fontSize: 10, padding: '2px 8px', background: '#111', color: '#4b5563', border: '1px solid #1f2937', borderRadius: 3, cursor: 'pointer' }}>
+                          ↑
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </>
           )}
 
-          {/* ── PIPELINE BOARD (Layer 2) ──────────────────────────── */}
-      {loading ? (
-        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <span className="oswald" style={{ color: '#374151', letterSpacing: '0.2em', fontSize: 14 }}>LOADING PIPELINE…</span>
+          {/* Tasks — collapsible bottom section on mobile */}
+          <div style={{ border: '1px solid #1f2937', borderRadius: 6, overflow: 'hidden', marginTop: 4 }}>
+            <button
+              onClick={() => setTasksOpen(o => !o)}
+              style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '11px 14px', background: '#080808', border: 'none', cursor: 'pointer' }}
+            >
+              <span className="oswald" style={{ fontSize: 12, letterSpacing: '0.15em', color: '#6b7280' }}>TASKS</span>
+              <span style={{ color: '#4b5563', fontSize: 12 }}>{tasksOpen ? '▲' : '▼'}</span>
+            </button>
+            {tasksOpen && <MicroTaskPanel onUpdate={load} />}
+          </div>
+
+          {/* Bottom padding for mobile */}
+          <div style={{ height: 24 }} />
         </div>
       ) : (
-        <div style={{ flex: 1, display: 'flex', overflowX: 'auto', overflowY: 'hidden', minHeight: 0 }}>
-          {/* Active phase columns */}
-          <div style={{ display: 'flex', overflowX: 'auto', flex: 1, alignItems: 'stretch' }}>
-            {DISPLAY_PHASES.map(phase => {
-              const ps = byPhase(phase)
-              const allForPhase = projects.filter(p => p.current_phase === phase)
-              return (
-                <div key={phase}
-                onDragOver={e => { e.preventDefault(); e.currentTarget.style.background = '#111' }}
-                onDragLeave={e => { e.currentTarget.style.background = 'transparent' }}
+        <div className="flex flex-col lg:flex-row gap-3 items-stretch lg:items-start flex-1 min-h-0" style={{ padding: '0 10px 10px 10px' }}>
+          <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {ribbonOpen && !loading && (
+              <WeeklyRibbon projects={projects} onUpdate={load} />
+            )}
+
+            {/* ── PIPELINE BOARD (Layer 2) ──────────────────────────── */}
+        {loading ? (
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <span className="oswald" style={{ color: '#374151', letterSpacing: '0.2em', fontSize: 14 }}>LOADING PIPELINE…</span>
+          </div>
+        ) : (
+          <div style={{ flex: 1, display: 'flex', overflowX: 'auto', overflowY: 'hidden', minHeight: 0 }}>
+            {/* Active phase columns */}
+            <div style={{ display: 'flex', overflowX: 'auto', flex: 1, alignItems: 'stretch' }}>
+              {DISPLAY_PHASES.map(phase => {
+                const ps = byPhase(phase)
+                const allForPhase = projects.filter(p => p.current_phase === phase)
+                return (
+                  <div key={phase}
+                  onDragOver={e => { e.preventDefault(); e.currentTarget.style.background = '#111' }}
+                  onDragLeave={e => { e.currentTarget.style.background = 'transparent' }}
+                  onDrop={e => {
+                    e.preventDefault()
+                    e.currentTarget.style.background = 'transparent'
+                    const projectId = e.dataTransfer.getData('projectId')
+                    if (!projectId) return
+                    setProjects(prev => prev.map(p => p.id === projectId ? { ...p, current_phase: phase } : p))
+                    fetch(`/api/project/${projectId}`, {
+                      method: 'PATCH',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ current_phase: phase })
+                    }).then(() => load())
+                  }}
+                  style={{
+                    flexShrink: 0, width: 220,
+                    borderRight: '1px solid #1a1a1a',
+                    display: 'flex', flexDirection: 'column',
+                    height: '100%', transition: 'background 0.15s'
+                  }}>
+                    {/* Column header */}
+                    <div style={{
+                      padding: '8px 10px', borderBottom: '1px solid #1a1a1a',
+                      background: '#080808', position: 'sticky', top: 0, zIndex: 1,
+                      display: 'flex', alignItems: 'center', justifyContent: 'space-between'
+                    }}>
+                      <span className="oswald" style={{ fontSize: 11, letterSpacing: '0.12em', color: '#6b7280', fontWeight: 600 }}>
+                        {PHASE_LABELS[phase].toUpperCase()}
+                      </span>
+                      <span className="badge badge-gray" style={{ fontSize: 9 }}>{allForPhase.length}</span>
+                    </div>
+                    {/* Cards */}
+                    <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', padding: '8px 6px', display: 'flex', flexDirection: 'column', gap: 6, minHeight: 0 }}>
+                      {ps.length === 0 ? (
+                        <p style={{ fontSize: 10, color: '#1f2937', textAlign: 'center', paddingTop: 16 }}>—</p>
+                      ) : (
+                        ps.map(p => <ProjectCard key={p.id} project={p} onUpdate={load} />)
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
+
+              {/* Archived (dimmed) */}
+              <div
+                onDragOver={e => { e.preventDefault(); e.currentTarget.style.opacity = '0.8'; e.currentTarget.style.background = '#111' }}
+                onDragLeave={e => { e.currentTarget.style.opacity = '0.35'; e.currentTarget.style.background = 'transparent' }}
                 onDrop={e => {
                   e.preventDefault()
+                  e.currentTarget.style.opacity = '0.35'
                   e.currentTarget.style.background = 'transparent'
                   const projectId = e.dataTransfer.getData('projectId')
                   if (!projectId) return
-                  setProjects(prev => prev.map(p => p.id === projectId ? { ...p, current_phase: phase } : p))
+
+                  setProjects(prev => prev.map(p => p.id === projectId ? { ...p, current_phase: 'archived' } : p))
+
+                  // Fire confetti explosion
+                  const rect = e.currentTarget.getBoundingClientRect()
+                  confetti({
+                    particleCount: 80,
+                    spread: 60,
+                    origin: { x: (rect.left + (rect.width/2)) / window.innerWidth, y: (rect.top + 40) / window.innerHeight },
+                    colors: ['#4b5563', '#9ca3af', '#d1d5db', '#1f2937'] // Gray scale for archive
+                  })
+
                   fetch(`/api/project/${projectId}`, {
                     method: 'PATCH',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ current_phase: phase })
+                    body: JSON.stringify({ current_phase: 'archived' })
                   }).then(() => load())
                 }}
-                style={{
-                  flexShrink: 0, width: 220,
-                  borderRight: '1px solid #1a1a1a',
-                  display: 'flex', flexDirection: 'column',
-                  height: '100%', transition: 'background 0.15s'
-                }}>
-                  {/* Column header */}
-                  <div style={{
-                    padding: '8px 10px', borderBottom: '1px solid #1a1a1a',
-                    background: '#080808', position: 'sticky', top: 0, zIndex: 1,
-                    display: 'flex', alignItems: 'center', justifyContent: 'space-between'
-                  }}>
-                    <span className="oswald" style={{ fontSize: 11, letterSpacing: '0.12em', color: '#6b7280', fontWeight: 600 }}>
-                      {PHASE_LABELS[phase].toUpperCase()}
-                    </span>
-                    <span className="badge badge-gray" style={{ fontSize: 9 }}>{allForPhase.length}</span>
-                  </div>
-                  {/* Cards */}
-                  <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', padding: '8px 6px', display: 'flex', flexDirection: 'column', gap: 6, minHeight: 0 }}>
-                    {ps.length === 0 ? (
-                      <p style={{ fontSize: 10, color: '#1f2937', textAlign: 'center', paddingTop: 16 }}>—</p>
-                    ) : (
-                      ps.map(p => <ProjectCard key={p.id} project={p} onUpdate={load} />)
-                    )}
-                  </div>
+                style={{ flexShrink: 0, width: 150, opacity: 0.35, display: 'flex', flexDirection: 'column', transition: 'all 0.15s' }}>
+                <div style={{ padding: '8px 10px', borderBottom: '1px solid #1a1a1a', background: '#080808', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span className="oswald" style={{ fontSize: 10, color: '#4b5563', letterSpacing: '0.12em' }}>ARCHIVED</span>
+                  <span className="badge badge-gray" style={{ fontSize: 9 }}>{projects.filter(p => p.current_phase === 'archived').length}</span>
                 </div>
-              )
-            })}
-
-            {/* Archived (dimmed) */}
-            <div 
-              onDragOver={e => { e.preventDefault(); e.currentTarget.style.opacity = '0.8'; e.currentTarget.style.background = '#111' }}
-              onDragLeave={e => { e.currentTarget.style.opacity = '0.35'; e.currentTarget.style.background = 'transparent' }}
-              onDrop={e => {
-                e.preventDefault()
-                e.currentTarget.style.opacity = '0.35'
-                e.currentTarget.style.background = 'transparent'
-                const projectId = e.dataTransfer.getData('projectId')
-                if (!projectId) return
-                
-                setProjects(prev => prev.map(p => p.id === projectId ? { ...p, current_phase: 'archived' } : p))
-
-                // Fire confetti explosion
-                const rect = e.currentTarget.getBoundingClientRect()
-                confetti({
-                  particleCount: 80,
-                  spread: 60,
-                  origin: { x: (rect.left + (rect.width/2)) / window.innerWidth, y: (rect.top + 40) / window.innerHeight },
-                  colors: ['#4b5563', '#9ca3af', '#d1d5db', '#1f2937'] // Gray scale for archive
-                })
-
-                fetch(`/api/project/${projectId}`, {
-                  method: 'PATCH',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ current_phase: 'archived' })
-                }).then(() => load())
-              }}
-              style={{ flexShrink: 0, width: 150, opacity: 0.35, display: 'flex', flexDirection: 'column', transition: 'all 0.15s' }}>
-              <div style={{ padding: '8px 10px', borderBottom: '1px solid #1a1a1a', background: '#080808', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <span className="oswald" style={{ fontSize: 10, color: '#4b5563', letterSpacing: '0.12em' }}>ARCHIVED</span>
-                <span className="badge badge-gray" style={{ fontSize: 9 }}>{projects.filter(p => p.current_phase === 'archived').length}</span>
-              </div>
-              <div style={{ flex: 1, overflowY: 'auto', padding: '8px 6px', display: 'flex', flexDirection: 'column', gap: 4 }}>
-                {projects.filter(p => p.current_phase === 'archived').map(p => (
-                  <div key={p.id} className="card" style={{ padding: '6px 8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <p style={{ fontSize: 10, color: '#4b5563' }}>{p.client_name}</p>
-                    <button
-                      title="Restore to Concept"
-                      onClick={async () => {
-                        await fetch(`/api/project/${p.id}`, {
-                          method: 'PATCH',
-                          headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({ current_phase: 'concept_service' })
-                        })
-                        await load()
-                      }}
-                      style={{ fontSize: 9, padding: '2px 5px', background: '#111', color: '#4b5563', border: '1px solid #1f2937', borderRadius: 3, cursor: 'pointer' }}>
-                      ↑
-                    </button>
-                  </div>
-                ))}
+                <div style={{ flex: 1, overflowY: 'auto', padding: '8px 6px', display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  {projects.filter(p => p.current_phase === 'archived').map(p => (
+                    <div key={p.id} className="card" style={{ padding: '6px 8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <p style={{ fontSize: 10, color: '#4b5563' }}>{p.client_name}</p>
+                      <button
+                        title="Restore to Concept"
+                        onClick={async () => {
+                          await fetch(`/api/project/${p.id}`, {
+                            method: 'PATCH',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ current_phase: 'concept_service' })
+                          })
+                          await load()
+                        }}
+                        style={{ fontSize: 9, padding: '2px 5px', background: '#111', color: '#4b5563', border: '1px solid #1f2937', borderRadius: 3, cursor: 'pointer' }}>
+                        ↑
+                      </button>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
+        )}
+
+          </div>
+          {/* ── MICRO TASK PANEL (right sidebar) ─────────────────── */}
+          <MicroTaskPanel onUpdate={load} />
         </div>
       )}
-    
-        </div>
-        {/* ── MICRO TASK PANEL (right sidebar) ─────────────────── */}
-        <MicroTaskPanel onUpdate={load} />
-      </div>
 </div>
   )
 }

@@ -275,3 +275,29 @@ body { background: var(--bg); color: #e5e7eb; font-family: 'Inter', sans-serif; 
 .drop-flash-anim {
   animation: drop-flash 0.5s ease-out forwards;
 }
+
+/* ── MOBILE RESPONSIVE ───────────────────────────────────── */
+@media (max-width: 767px) {
+  /* Header compact */
+  .mobile-filter-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 2px;
+  }
+  .mobile-filter-scroll::-webkit-scrollbar { display: none; }
+
+  /* Ribbon: more compact columns on mobile */
+  .ribbon-day {
+    min-width: 90px !important;
+  }
+
+  /* Cards: full width on mobile, remove hover shadows that cause reflow */
+  .card {
+    width: 100%;
+  }
+
+  /* Prevent horizontal overflow on body */
+  body {
+    overflow-x: hidden;
+  }
+}
